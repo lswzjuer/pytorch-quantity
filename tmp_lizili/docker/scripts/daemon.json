@@ -1,0 +1,12 @@
+{
+    "insecure-registries" : [
+        "docker.fabu.ai:5000",
+        "192.168.3.100:5000"
+    ],
+    "runtimes": {
+        "nvidia": {
+            "path": "/usr/bin/nvidia-container-runtime",
+            "runtimeArgs": []
+        }
+    }
+}

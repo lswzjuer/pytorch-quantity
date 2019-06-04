@@ -1,0 +1,48 @@
+syntax = "proto2";
+
+package roadstar.dreamview;
+
+import "modules/msgs/dreamview/proto/available_maps.proto";
+import "modules/msgs/dreamview/proto/camera_data.proto";
+import "modules/msgs/dreamview/proto/simulation_world.proto";
+import "modules/msgs/dreamview/proto/local_map.proto";
+import "modules/msgs/dreamview/proto/player.proto";
+import "modules/msgs/dreamview/proto/hmi_status.proto";
+import "modules/msgs/dreamview/proto/hmi_config.proto";
+import "modules/msgs/dreamview/proto/rosbag_readme.proto";
+import "modules/msgs/hdmap/proto/hdmap_common.proto";
+import "modules/msgs/hdmap/proto/rpc_service.proto";
+import "modules/msgs/hdmap/proto/path.proto";
+import "modules/msgs/planning/proto/planning_debug_info.proto";
+
+message Response {
+  enum Type {
+    CAMERA_DATA = 2;
+    SIMULATION_WORLD = 3;
+    LOCAL_MAP = 4;
+    MAP_ELEMENTS = 5;
+    ROUTING_PATH = 6;
+    HMI_CONFIG = 7;
+    HMI_STATUS = 8;
+    AVAILABLE_MAPS = 9;
+    README = 10;
+    DEBUG_INFO = 11;
+    BAG_TIME = 12;
+    BAG_DATA = 13;
+    SELECT_CAMERA = 14;
+  }
+  optional Type type = 1;
+  optional CameraData camera_data = 2;
+  optional SimulationWorld simulation_world = 3;
+  optional LocalMap local_map = 4;
+  optional roadstar.hdmap.MapElements map_elements = 5;
+  optional roadstar.hdmap.Path routing_path = 6;
+  optional HMIConfig hmi_config = 7;
+  optional HMIStatus hmi_status = 8;
+  optional AvailableMaps available_maps = 9;
+  optional HMIReadMe readme = 10;
+  optional roadstar.planning.PlanningDebugInfo debug_info = 11;
+  optional BagTime bag_time = 12;
+  optional BagData bag_data = 13;
+  optional SelectCamera select_camera = 14;
+}

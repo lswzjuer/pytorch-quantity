@@ -1,0 +1,19 @@
+syntax = "proto2";
+
+package roadstar.common.visualization;
+
+import "modules/common/proto/colormap.proto";
+
+message HdmapRenderParam {
+  // the width of connection. Unit: pixel
+  optional double connection_width = 1 [default = 1];
+
+  // the width of lane. Unit: pixel
+  optional double lane_marker_width = 2 [default = 1];
+
+  optional roadstar.common.util.ColorName lane_marker_color = 3
+      [default = Green];
+
+  optional roadstar.common.util.ColorName connection_color = 4
+      [default = Blue];
+}

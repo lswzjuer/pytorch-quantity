@@ -1,0 +1,71 @@
+syntax = "proto2";
+package roadstar.canbus.hongqi;
+
+import "modules/msgs/canbus/proto/chassis.proto";
+
+message Hongqi {
+  optional Eps eps = 1;
+  optional Epb epb = 2;
+  optional Tcu tcu = 3;
+  optional Icu icu = 4;
+  optional Abs abs = 5;
+  optional Longitudinal longitudinal = 6;
+  optional LastUpdatedTime last_updated_time = 7;
+}
+
+message LastUpdatedTime {
+  optional int64 abs_rx_0 = 1;
+  optional int64 abs_rx_1 = 2;
+  optional int64 epb_rx_0 = 3;
+  optional int64 longitudinal_rx_0 = 4;
+  optional int64 misc_rx_0 = 5;
+  optional int64 misc_rx_1 = 6;
+  optional int64 steering_rx_0 = 7;
+  optional int64 steering_rx_1 = 8;
+  optional int64 tcu_rx_0 = 9;
+}
+
+message Tcu {
+  optional int32 gear_mode = 1 [default = 0]; 
+  optional Chassis.GearPosition gear_working = 2;
+  optional bool tcu_fault = 3 [default = false];
+}
+
+message Eps {
+  optional int32 steering_mode = 1 [default = 0]; 
+  optional double steering_angle_executed = 2 [default = 0];
+  optional double steering_angle_speed_executed = 3 [default = 0];
+  optional double steering_wheel_torque = 4 [default = 0];
+  optional bool steering_fault = 6 [default = false];
+  optional bool sensor_fault = 7 [default = false];
+}
+
+message Epb {
+  optional int32 epb_status = 1 [default = 0];
+  optional bool epb_fault = 2 [default = false];
+  optional int32 life_counter = 3 [default = 0];
+}
+
+message Abs {
+  optional double wheelspeed_leftfront = 1;
+  optional double wheelspeed_rightfront = 2;
+  optional double wheelspeed_leftrear = 3;
+  optional double wheelspeed_rightrear = 4;
+  optional double vehicle_speed = 5;
+}
+
+message Icu{
+  optional Chassis.Status horn = 8 [default = OFF];
+  optional Chassis.Status high_beam = 4 [default = OFF];
+  optional Chassis.Status low_beam = 5 [default = OFF];
+  optional Chassis.Status left_turn_lamp = 2 [default = OFF];
+  optional Chassis.Status right_turn_lamp = 3 [default = OFF];
+}
+
+message Longitudinal {
+  optional int32 driving_mode = 1;
+  optional int32 braking_mode = 2;
+  optional int32 driving_fault = 3 [default = 0]; 
+  optional int32 braking_fault = 4 [default = 0]; 
+  optional int32 system_fault = 5 [default = 0]; 
+}

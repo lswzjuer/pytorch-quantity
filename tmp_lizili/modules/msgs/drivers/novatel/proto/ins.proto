@@ -1,0 +1,81 @@
+syntax = "proto2";
+
+package roadstar.drivers.gnss;
+
+import "modules/common/proto/header.proto";
+import "modules/common/proto/geometry.proto";
+import "modules/msgs/drivers/novatel/proto/gnss_best_pose.proto";
+
+enum InsStatusType {
+  INACTIVE = 0;
+  ALIGNING = 1;
+  HIGH_VARIANGE = 2;
+  SOLUTION_GOOD = 3;
+  SOLUTION_FREE = 6;
+  ALIGNMENT_COMPLETE = 7;
+  DETERMINING_ORIENTATION = 8;
+  WAITING_INITALPOS = 9;
+  WAITING_AZIMUTH = 10;
+  INITIALIZING_BIASES = 11;
+  MOTION_DETECT = 12;
+}
+
+message InsStat {
+  optional roadstar.common.Header header = 1;
+  optional InsStatusType ins_status = 2;
+  optional SolutionType pos_type = 3;
+}
+
+// Solution from a inertial navigation system (INS), which usually fuses GNSS
+// and IMU measurements.
+message Ins {
+  optional roadstar.common.Header header = 1;
+
+  // The time of position measurement, seconds since the GPS epoch (01/06/1980).
+  optional double measurement_time = 2;  // In seconds.
+
+  // INS solution type.
+  enum Type {
+    // Do NOT use.
+    // Invalid solution due to insufficient observations, no initial GNSS, ...
+    INVALID = 0;
+
+    // Use with caution. The covariance matrix may be unavailable or incorrect.
+    // High-variance result due to aligning, insufficient vehicle dynamics, ...
+    CONVERGING = 1;
+
+    // Safe to use. The INS has fully converged.
+    GOOD = 2;
+  }
+  optional Type type = 3;
+
+  // Position of the IMU.
+  optional roadstar.common.PointLLH position = 4;
+
+  // Roll/pitch/yaw that represents a rotation of the intrinsic sequence z-y-x.
+  // Note: our definition differs from what NovAtel and aviation use.
+
+  // Roll/pitch/yaw in radians.
+  optional roadstar.common.Point3D euler_angles = 5;
+  // East/north/up in meters per second.
+  optional roadstar.common.Point3D linear_velocity = 6;
+  // Around forward/left/up axes in radians per second.
+  optional roadstar.common.Point3D angular_velocity = 7;
+  // Forward/left/up in meters per square second.
+  optional roadstar.common.Point3D linear_acceleration = 8;
+
+  // latitude/longitude/height std dev of INS in meters
+  optional float latitude_std = 9;
+  optional float longitude_std = 10;
+  optional float  height_std = 11;
+
+  // north/east/up velocity std dev in meters per second.
+  optional float north_velocity_std= 12;
+  optional float east_velocity_std = 13;
+  optional float up_velocity_std = 14;
+
+  // roll/pitch/azimuth std dev in radians.
+  optional float roll_std = 15;
+  optional float pitch_std = 16;
+  optional float azimuth_std = 17;
+}

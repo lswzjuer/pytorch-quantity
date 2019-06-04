@@ -1,0 +1,30 @@
+syntax = "proto2";
+
+package roadstar.common.util;
+
+enum ColorName {
+  Red = 0;             // 红色
+  Green = 1;           // 绿色
+  Blue = 2;            // 蓝色
+  Black = 3;           // 黑色
+  White = 4;           // 白色
+  Yellow = 5;          // 黄色
+  Cyan = 6;            // 青色
+  Orange = 7;          // 橙色
+  Purple = 8;          // 紫色
+  RoyalBlue = 9;       // 品蓝
+  GreenEarth = 10;     // 绿土
+  Chocolate = 11;      // 巧克力色
+  IndianRed = 12;      // 印度红
+  DeepRed = 13;        // 深红
+  Flaxen = 14;         // 亚麻色
+  PeakGreen = 15;      // 嫩绿色
+  SquidInkBrown = 16;  // 乌贼墨棕
+  Violet = 17;         // 紫罗兰色
+  MeiRed = 18;         // 梅红色
+  PeacockBlue = 19;    // 孔雀蓝
+  TurkishJade = 20;    // 土耳其玉
+  SlateGray = 21;      // 石板灰
+  Gray = 22;           // 普通的灰
+  GhostWhite = 23;     // 幽灵白
+}

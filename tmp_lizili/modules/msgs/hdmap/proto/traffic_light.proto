@@ -1,0 +1,17 @@
+syntax = "proto2";
+
+package roadstar.hdmap;
+
+import "modules/msgs/hdmap/proto/hdmap_common.proto";
+import "modules/common/proto/geometry.proto";
+
+message TrafficLight {
+  // Traffic light unique id;
+  optional int32 id = 1;
+
+  // Traffic light position.
+  optional roadstar.common.PointENU position = 2;
+
+  // Traffic light type.
+  optional TrafficLightType type = 3;
+}

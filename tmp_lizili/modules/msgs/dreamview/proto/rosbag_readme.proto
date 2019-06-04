@@ -1,0 +1,28 @@
+syntax = "proto2";
+
+package roadstar.dreamview;
+
+message HMIReadMe {
+  // The name of the person who recording the bag.
+  optional string name = 1;
+
+  // The recording bag time. 
+  optional string time = 2;
+
+  // The vehicle name.
+  optional string vehicle = 3;
+
+  // The map name.
+  optional string map = 4;
+
+  // The wheather condition.
+  optional string weather = 5;
+
+  // Message.
+  repeated string topics = 6;
+
+  repeated string new_topics = 7;
+
+  // Others notes.
+  optional string others = 8;
+}

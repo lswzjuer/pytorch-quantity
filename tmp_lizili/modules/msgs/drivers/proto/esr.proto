@@ -1,0 +1,89 @@
+syntax = "proto2";
+
+package roadstar.drivers;
+
+message EsrMessage {
+  enum GroupingChanged {
+    NO_CHANGE = 0;
+    CHANGE = 1;
+  }
+  enum Oncoming {
+    NOT_ONCOMING = 0;
+    ONCOMING = 1;
+  }
+  enum MedRangeMode {
+    NO_MR_LR = 0;
+    MR_ONLY = 1;
+    LR_ONLY = 2;
+    BOTH_MR_LR = 3;
+  }
+  enum Status {
+    NO_TARGET = 0;
+    NEW_TARGET = 1;
+    NEW_UPDATED_TARGET = 2;
+    UPDATED_TARGET = 3;
+    COASTED_TARGET = 4;
+    MERGED_TARGET = 5;
+    INVALID_COASTED_TARGET = 6;
+    NEW_COASTED_TARGET = 7;
+  }
+  enum BridgeObject {
+    NOT_BRIDGE = 0;
+    BRIDGE = 1;
+  }
+
+  // rolling count of all messages in this burst
+  optional int32 rolling_count = 1;
+  // how far away is the obstacle from the sensor
+  optional float range = 2;
+  // the speed of the obstacle
+  optional float range_rate = 3;
+  // the acceleration
+  optional float range_accel = 4;
+  // the angle of the obstacle
+  optional float angle = 5;
+  // the width of the obstacle
+  optional float width = 6;
+  // boolean indicator that the number of detection associated
+  // with the track have changed
+  optional GroupingChanged grouping_changed = 7;
+  // oncoming flag
+  optional Oncoming oncoming = 8;
+  // lateral rate
+  optional float lat_rate = 9;
+  // indicated which mode updated the fused track
+  optional MedRangeMode med_range_mode = 10;
+  // measurement status
+  optional Status status = 11;
+  // bridge object
+  optional BridgeObject bridge_object=12;
+
+  // time stamp of the system
+  optional int64 timestamp = 13;
+  // can message id
+  optional int32 id = 14;
+}
+
+message VehicleMessage {
+  // Scan Index (n/a)
+  optional uint32 scan_index = 1;
+  // Rolling count , Make this the lower 2 bits of "Scan Index" above (n/a)
+  optional int32 rolling_count = 2;
+  // Upper 7 bits of lower byte of DSP timestamp in ms (ms)
+  optional int32 dsp_timestamp = 3;
+  // Contains the compensated vehicle speed used within the ESR.(m/s)
+  // The ESR internally compensates based on range rate of stationary targes.
+  optional double vehicle_speed_calc = 4;
+  // Contains the bias-compensated yaw rate used within the ESR(deg/s)
+  optional double yaw_rate_calc = 5;
+  // Contains the calculated radius-of-curvature used within the ESR(m)
+  optional int32 radius_curvature_calc = 6;
+  // Indication that the sensor has detected a communication error
+  optional bool comm_error = 7;
+
+}
+
+message Esr {
+  repeated EsrMessage msgs = 1;
+  optional VehicleMessage veh_msg = 2;
+}

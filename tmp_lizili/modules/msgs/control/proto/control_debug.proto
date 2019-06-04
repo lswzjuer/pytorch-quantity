@@ -1,0 +1,19 @@
+syntax = "proto2";
+package roadstar.control;
+
+import "modules/common/proto/header.proto";
+import "modules/msgs/control/proto/speed_controller_debug.proto";
+import "modules/msgs/control/proto/braking_controller_debug.proto";
+import "modules/msgs/control/proto/steer_controller_debug.proto";
+
+message ControlDebug {
+  optional roadstar.common.Header header = 1;
+
+  optional roadstar.control.SpeedControllerDebug speed_controller_debug = 2;
+  optional roadstar.control.BrakingControllerDebug braking_controller_debug = 3;
+  optional roadstar.control.SteerControllerDebug steer_controller_debug = 4;
+
+  optional double desired_velocity = 5;
+  optional double current_velocity = 6;
+  
+}

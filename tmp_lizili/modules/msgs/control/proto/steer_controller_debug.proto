@@ -1,0 +1,20 @@
+syntax = "proto2";
+
+package roadstar.control;
+import "modules/msgs/planning/proto/planning.proto";
+
+// steer controller debug information
+message SteerControllerDebug {
+  // vehicle lateral position error
+  optional double position_error = 1;
+  // vehicle yaw error
+  optional double yaw_error = 2;
+
+  optional double front_position_error = 3;
+
+  optional double tail_position_error = 4;
+
+  // a series of points on the trajectory
+  repeated roadstar.planning.TrajectoryPoint free_global_point = 5;
+  repeated roadstar.planning.TrajectoryPoint ref_global_point = 6;
+}

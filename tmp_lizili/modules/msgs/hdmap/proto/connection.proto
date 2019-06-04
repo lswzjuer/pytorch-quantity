@@ -1,0 +1,38 @@
+syntax = "proto2";
+
+package roadstar.hdmap;
+
+import "modules/msgs/hdmap/proto/hdmap_common.proto";
+import "modules/common/proto/geometry.proto";
+import "modules/msgs/hdmap/proto/pavement.proto";
+
+message Connection {
+  // Connection unique id.
+  optional int32 id = 1;
+
+  // Connection center.
+  optional roadstar.common.PointENU center = 2;
+
+  // Whether it is a virtual connection.
+  optional bool is_virtual = 3;
+
+  message TurnInfo {
+    // Previous section id.
+    optional int32 prev_section_id = 4;
+
+    // Next section id.
+    optional int32 next_section_id = 5;
+
+    // Turn type.
+    optional TurnType type = 6;
+  }
+
+  // Each turn info indicates two sections are connected by the connection.
+  repeated TurnInfo turn_info = 7;
+
+  // Polygon (Extra points in xml map).
+  optional roadstar.common.Polygon polygon = 8;
+
+  // Pavement.
+  repeated Pavement pavements = 9;
+}

@@ -1,0 +1,15 @@
+syntax = "proto2";
+
+package roadstar.integration_test;
+
+import "modules/msgs/localization/proto/localization.proto";
+import "modules/msgs/perception/proto/fusion_map.proto";
+import "modules/msgs/perception/proto/detection_result.proto";
+import "modules/msgs/perception/proto/traffic_light_detection.proto";
+
+message PerceptionTestDataSet{
+  repeated roadstar.localization.Localization localizations = 1;
+  repeated roadstar.perception.FusionMap fusion_maps = 2;
+  repeated roadstar.perception.DetectionResultProto lidar_detection_results = 3;
+  repeated roadstar.perception.TrafficLightDetection traffic_light_detections = 4;
+}

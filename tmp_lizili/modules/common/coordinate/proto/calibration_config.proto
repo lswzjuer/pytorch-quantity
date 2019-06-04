@@ -1,0 +1,19 @@
+syntax = "proto2";
+
+import "modules/common/proto/sensor_source.proto";
+
+package roadstar.common.calibration_config;
+
+message CalibrationConfigs {
+  message SensorFile {
+    required roadstar.common.sensor.SensorSource sensor_name = 1;
+    required string file_name = 2;
+  }
+
+  message SensorFileConfig {
+    repeated SensorFile sensor_files = 1;
+    repeated SensorFile camera_files = 2;
+  }
+
+  optional SensorFileConfig sensor_file_config = 3;
+}

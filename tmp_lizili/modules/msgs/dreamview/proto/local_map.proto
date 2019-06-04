@@ -1,0 +1,10 @@
+syntax = "proto2";
+
+package roadstar.dreamview;
+
+import "modules/msgs/hdmap/proto/map.proto";
+
+message LocalMap {
+  optional double radius = 1;
+  optional roadstar.hdmap.MapProto map = 2;
+}

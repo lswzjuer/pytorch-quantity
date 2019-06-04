@@ -1,0 +1,42 @@
+syntax = "proto2";
+
+import "modules/msgs/hdmap/proto/hdmap_common.proto";
+import "modules/msgs/hdmap/proto/lanemarker.proto";
+
+package roadstar.hdmap;
+
+message Lane {
+  // Id.
+  optional int32 id = 1;
+
+  // Minimum speed limit of lane.
+  optional uint64 min_speed_limit = 2 [default = 0];
+
+  // Maximum speed limit of lane.
+  optional uint64 max_speed_limit = 3;
+
+  // The lane may have more than one turn type.
+  repeated TurnType turn_type = 4;
+
+  // Deprecated.
+  optional int32 lane_priority = 5;  // not used
+
+  // Left lanemarker id.
+  optional int32 left_lanemarker_id = 6;
+
+  // Right lanemarker id.
+  optional int32 right_lanemarker_id = 7;
+
+  // Lane type.
+  optional LaneType lane_type = 8;
+
+  message WaitingLane {
+    optional Lanemarker left_lanemarker = 1;
+    optional Lanemarker right_lanemarker = 2;
+  }
+
+  // Waiting lane.
+  // If there is no waiting lane in the section, the lanemarker point size is
+  // zero.
+  optional WaitingLane waiting_lane = 9;
+}

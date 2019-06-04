@@ -1,0 +1,102 @@
+syntax = "proto2";
+package roadstar.canbus.jiefang;
+
+import "modules/msgs/canbus/proto/chassis.proto";
+
+message Jiefang {
+  optional Adv adv = 1;
+  optional Ebs ebs = 2;
+  optional Ems ems = 3;
+  optional Epb epb = 4;
+  optional Eps eps = 5;
+  optional Misc misc = 6;
+  optional Tcu tcu = 7;
+  optional LastUpdatedTime last_updated_time = 8;
+}
+
+message LastUpdatedTime {
+  optional int64 adv_rx_0 = 1;
+  optional int64 tcu_rx_0 = 2;
+  optional int64 tcu_rx_1 = 3;
+  optional int64 ems_rx_0 = 4;
+  optional int64 epb_rx_0 = 5;
+  optional int64 epb_rx_1 = 6;
+  optional int64 ebs_rx_0 = 7;
+  optional int64 ebs_rx_1 = 8;
+  optional int64 eps_rx_0 = 9;
+  optional int64 eps_rx_1 = 10;
+  optional int64 misc_rx_0 = 11;
+  optional int64 misc_rx_1 = 12;
+  optional int64 misc_rx_2 = 13;
+}
+
+message Adv {
+  optional int32 vcu_mode = 1;
+  optional int32 manual_brake_switch = 2;
+  optional double manual_accelerator_pedal_postion = 3;
+  optional int32 auto_to_manual_tip = 4;
+}
+
+message Ebs {
+  optional int32 abs_active = 1;
+  optional int32 ebs_brake_switch = 2;
+  optional double brake_pedal_position = 3;
+  optional int32 ebs_red_warning_signal = 4;
+  optional int32 ebs_amber_warning_signal = 5;
+  optional int32 front_axle_speed = 6;
+  optional int32 front_left_wheel_speed = 7;
+  optional int32 front_right_wheel_speed = 8;
+  optional int32 first_rear_left_wheel_speed = 9;
+  optional int32 first_rear_right_wheel_speed = 10;
+  optional int32 second_rear_left_wheel_speed = 11;
+  optional int32 second_rear_right_wheel_speed = 12;
+}
+
+message Ems {
+  optional int32 engine_torque_mode = 1;
+  optional int32 demand_engine_torque = 2;
+  optional int32 percent_torque = 3;
+  optional int32 engine_speed = 4;
+}
+
+message Epb {
+  optional int32 working_mode = 1;
+  optional int32 driverless_mode = 2;
+  optional int32 parking_brake_switch = 3;
+  optional double vehicle_speed = 4;
+  optional int32 brake_switch = 5;
+}
+message Eps {
+  optional double column_torque = 1;
+  optional int32 column_torque_qf = 2;
+  optional int32 ignition_state = 3;
+  optional int32 checksum = 4;
+  optional int32 alive_counter = 5;
+  optional double absolute_steering_position = 6;
+  optional int32 status_error = 7;
+  optional int32 actual_mode = 8;
+  optional int32 request_mode = 9;
+  optional int32 absolute_steering_position_qf = 10;
+}
+
+message Misc {
+  optional Chassis.Status fog_light = 1;
+  optional Chassis.Status low_beam = 2;
+  optional Chassis.Status high_beam = 3;
+  optional Chassis.Status left_turn_light = 4;
+  optional Chassis.Status right_turn_light = 5;
+  optional Chassis.Status rear_light = 6;
+  optional Chassis.Status clearance_light = 7;
+  optional int32 bcm_mode = 8;
+  optional Chassis.Status brake_light = 9;
+  optional Chassis.Status horn = 10;
+  optional int32 front_operator_wiper_switch = 11;
+  optional int32 front_operator_washer_switch = 12;
+}
+
+message Tcu {
+  optional double output_shaft_speed = 1;
+  optional double input_shaft_speed = 2;
+  optional double actual_gear_ratio = 3;
+  optional Chassis.GearPosition current_gear = 4;
+}

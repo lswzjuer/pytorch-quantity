@@ -1,0 +1,56 @@
+syntax = "proto2";
+
+package roadstar.perception;
+
+import "modules/common/proto/header.proto";
+import "modules/common/proto/geometry.proto";
+import "modules/common/proto/sensor_source.proto";
+
+message TrafficLight {
+  enum Color {
+    UNKNOWN = 0;
+    RED = 1;
+    GREEN = 2;
+    YELLOW = 3;
+  };
+  optional Color color = 1;
+
+  enum LightType {
+    UNKNOWN_TYPE = 0;
+    CYCLE = 1;
+    LEFT = 2;
+    STRAIGHT = 3;
+    RIGHT = 4;
+    TURN = 5;
+    TURNLEFT = 6;
+    STRAIGHT_LEFT = 7;
+    COUNT_DOWN = 8;
+  };
+  optional LightType light_type = 2;
+
+  // Traffic light is twinkle or not.
+  optional bool is_twinkle = 3 [default = false];
+
+  // Counting down time for counting down.
+  optional int32 countdown_time = 4;
+
+  // Traffic light string-ID in the map data.
+  optional string id = 5;
+
+  // How confidence about the detected results, between 0 and 1.
+  optional double confidence = 6 [default = 1.0];
+
+  // Duration of the traffic light since detected.
+  optional double tracking_time = 7;
+
+  // traffic light 2d bounding box in camera coordinate.
+  optional roadstar.common.Box2d img_box = 8;
+}
+
+message TrafficLightDetection {
+  optional roadstar.common.Header header = 1;
+  repeated TrafficLight traffic_light = 2;
+  optional roadstar.common.sensor.SensorSource sensor_source = 3
+      [default = UnknownSource];
+  optional roadstar.common.Box2d roi = 4;
+}

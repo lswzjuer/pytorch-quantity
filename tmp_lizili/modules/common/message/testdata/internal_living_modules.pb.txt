@@ -1,0 +1,4 @@
+living_modules {
+  name: "module_d"
+  endpoint: "127.0.0.1:20003"
+}

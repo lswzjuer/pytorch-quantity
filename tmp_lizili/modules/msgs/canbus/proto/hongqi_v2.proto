@@ -1,0 +1,67 @@
+syntax = "proto2";
+package roadstar.canbus.hongqi_v2;
+
+import "modules/msgs/canbus/proto/chassis.proto";
+
+message HongqiV2 {
+  optional Cds cds = 1;
+  optional Sas sas = 2;
+  optional Abs abs = 3;
+  optional Hcu hcu = 4;
+  optional Yrs yrs = 5;
+  optional LastUpdatedTime last_updated_time = 6;
+}
+
+message LastUpdatedTime {
+  optional int64 abs_rx_1 = 1;
+  optional int64 abs_rx_2 = 2;
+  optional int64 cds_rx_1 = 3;
+  optional int64 sas_rx_1 = 4;
+  optional int64 hcu_rx_5 = 5;
+  optional int64 hcu_rx_14 = 6;
+  optional int64 yrs_rx_1 = 7;
+  optional int64 yrs_rx_2 = 8;
+}
+
+message Sas {
+  optional int32 steering_mode = 1 [default = 0]; 
+  optional double steering_angle_executed = 2 [default = 0];
+  optional double steering_angle_speed_executed = 3 [default = 0];
+  optional double steering_wheel_torque = 4 [default = 0];
+  optional int32 sas_status= 5;
+}
+
+message Abs {
+  optional double wheelspeed_leftfront = 1;
+  optional double wheelspeed_rightfront = 2;
+  optional double wheelspeed_leftrear = 3;
+  optional double wheelspeed_rightrear = 4;
+  optional double vehicle_speed = 5;
+  optional int32 driving_direction = 6;
+}
+
+message Cds {
+  optional bool driving_mode = 1 [default = false];
+  optional bool braking_mode = 2 [default = false];
+  optional bool steering_mode = 3 [default = false];
+  optional bool driving_fault = 4 [default = false]; 
+  optional bool braking_fault = 5 [default = false]; 
+  optional bool steering_fault = 6 [default = false]; 
+  optional bool system_fault = 7 [default = false]; 
+  optional int32 epb_status = 8 [default = 0]; 
+  optional int32 control_mode = 9 [default = 0]; 
+}
+
+message Hcu {
+  optional Chassis.GearPosition gear_working = 1;
+  optional int32 ev_ready = 2;
+}
+
+message Yrs {
+  optional double yaw_rate = 1;
+  optional double longitudinal_acceleration = 2;
+  optional double lateral_acceleration = 3;
+  optional double yaw_rate_offset = 4;
+  optional double longitudinal_acceleration_offset = 5;
+  optional double lateral_acceleration_offset = 6;
+}

@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<server run_mode="run_with_release"/>
+<powertrain run_mode="run_with_release"/> 
+<hdmap run_mode="run_with_release"/> 
+<planning run_mode="run_with_release"/>
+<control run_mode="run_with_release"/>
+<dreamview run_mode="run_with_release"/>
+<node run_mode="run_with_release"/>
+
+<map_conf map_name="zhendong_wuzhen" routing="go_alternate_route"/> 
+
+<vehicle name="truck2"/>
+
+<init utm_x="267636" utm_y="3389545" yaw="1.78"/>
+<report path="modules/simulation/simulation_world/node/reports/" name="zhendong_wuzhen_go_alternate_route" />
+<output path="/private/simulation/integration_test/"/> 

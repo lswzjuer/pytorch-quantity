@@ -1,0 +1,61 @@
+syntax = "proto2";
+
+package roadstar.perception;
+
+import "modules/msgs/perception/proto/geo.proto";
+
+// Proto version of modules/perception/base/object.h
+// Next ID: 16
+message ObjectProto {
+  optional int32 id = 1;
+  optional double timestamp = 2;
+  // modules/perception/base/types.h
+  optional uint32 source_type = 3;
+  optional int32 source_id = 4;
+  optional Vector3d anchor_point = 5;
+  optional double confidence = 6;
+  // modules/perception/base/types.h
+  optional uint32 type = 7;
+  repeated float type_probs = 8;
+  optional double association_score = 9;
+  optional int32 merge_id = 10;
+
+  optional Vector3d direction = 11;
+  optional Vector3d local_direction = 12;
+  optional double theta = 13;
+  optional double local_theta = 14;
+  optional Vector3d center = 15;
+  optional Vector3d local_center = 16;
+  optional double length = 17;
+  optional double width = 18;
+  optional double height = 19;
+  repeated Vector2d polygon = 20;
+
+  repeated int32 occupied_grids = 21;
+  repeated Vector3d points = 22;
+  optional Vector3d centroid = 23;
+  optional Vector3d local_centroid = 24;
+  optional bool is_blocked = 25;
+  optional float shape_score = 26;
+
+  optional Vector3d center_ego_front = 27;
+  optional double velocity_x = 28;
+  optional double velocity_y = 29;
+  optional double acceleration_x = 30;
+  optional double acceleration_y = 31;
+  optional bool is_background = 32;
+
+  optional AABox2dProto img_box_ = 33;
+  optional double dis_lane_left_ = 34;
+  optional double camera_ego_y = 35;
+  optional double ego_width = 36;
+  optional int32 object_type = 37;
+
+  repeated int32 radar_ids = 38;
+  optional int32 vision_id = 39;
+  optional Vector3d position = 40;
+  optional double heading = 41;
+
+  optional int32 track_id = 42;
+  optional double angular_velocity = 43;
+};

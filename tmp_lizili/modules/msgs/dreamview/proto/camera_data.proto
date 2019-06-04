@@ -1,0 +1,12 @@
+syntax = "proto2";
+
+package roadstar.dreamview;
+
+message CameraData {
+  map<string, string> data = 1;
+}
+
+message SelectCamera {
+  optional string name = 1;
+  repeated string cameras = 2;
+}

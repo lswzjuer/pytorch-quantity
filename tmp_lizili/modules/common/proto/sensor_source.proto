@@ -1,0 +1,64 @@
+syntax = "proto2";
+
+package roadstar.common.sensor;
+
+enum SensorSource {
+  UnknownSource = 0;
+  /// lidar
+  LidarMain = 1;
+  LidarTailLeft = 2;
+  LidarTailRight = 3;
+  LidarHeadMid = 4;
+  LidarMerge = 5;
+  LidarTailMid = 6;
+  LidarHeadLeft = 7;
+  LidarHeadRight = 8;
+  // lidar rs
+  LidarMidLeft = 92;
+  LidarMidRight = 93;
+  LidarTopLeft = 94;
+  LidarTopRight = 95;
+  // radar
+  RadarTailMid = 20;
+  RadarHeadMid = 21;
+  UltrasonicRadarFront = 25;
+  UltrasonicRadarMid = 26;
+  UltrasonicRadarRear = 27;
+  // camera
+  CameraHeadLeft = 40;
+  CameraHeadRight = 41;
+  CameraFrontLeft = 42;
+  CameraFrontRight = 43;
+  CameraMidLeft = 44;
+  CameraMidRight = 45;
+  CameraTailLeft = 46;
+  CameraTailRight = 47;
+  CameraTrafficLight = 48;
+  // localization
+  VehicleCenter = 60;  // IMU
+  AsensingIns = 61;
+  // virtual
+  World = 70;
+  EgoFront = 71;
+  FusionTrack = 81;
+  FusionPre = 82;
+  FusionLidarRadarMerge = 83;
+  VisualizeRaw = 91;
+  // sync
+  SyncLidarHead = 100;
+  SyncLidarFrontLeft = 101;
+  SyncLidarFrontRight = 102;
+  SyncLidarMidLeft = 103;
+  SyncLidarMidRight = 104;
+  SyncLidarTailLeft = 105;
+  SyncLidarTailRight = 106;
+}
+
+enum SensorType {
+  Unknown = 0;
+  Lidar = 1;
+  Radar = 2;
+  Camera = 3;
+  Fusion = 4;
+  Sync = 5;
+}

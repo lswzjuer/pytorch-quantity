@@ -1,0 +1,58 @@
+syntax = "proto2";
+
+package roadstar.common;
+
+message VehicleInfo {
+  enum VehicleType {
+    CAR = 1;
+    TRUCK = 2;
+  }
+
+  enum BrakingInterface {
+    DECELARATION = 1;
+    SPEED = 2;
+  }
+
+  // Basic info.
+  optional string name = 1;
+  optional VehicleType vehicle_type = 2;
+
+  // Vehicle size.
+  optional double length = 11;
+  optional double width = 12;
+  optional double height = 13;
+  optional double wheel_base = 14;
+  optional double front_track = 15;
+  optional double rear_track = 16;
+  optional double front_overhang = 17;
+  optional double rear_overhang = 18;
+  optional double rearview_mirror_width = 19;
+
+  // Steering system.
+  optional double left_steering_ratio = 21;
+  optional double right_steering_ratio = 22;
+  optional double max_left_steering_angle = 23;
+  optional double max_right_steering_angle = 24;
+  optional double steering_offset = 25;
+  optional double max_hardware_steering_rate = 26;
+
+  // Power system.
+  optional double engine_idle_acc = 31;
+  optional double engine_idle_speed = 32;
+  optional double acc_signal_coefficient = 33;
+
+  // Braking system.
+  optional BrakingInterface braking_interface = 40;
+  optional double ebs_delay_time = 41;
+  optional double emergency_stop_dec = 42;
+  optional double deceleration_deadzone = 43;
+
+  // Tire characteristics.
+  optional double front_cornering_stiffness = 51;
+  optional double rear_cornering_stiffness = 52;
+
+  // Others.
+  optional double front_mass = 61;
+  optional double rear_mass = 62;
+  optional double imu_heading_offset = 63;
+}

@@ -1,0 +1,13 @@
+syntax = "proto2";
+
+package roadstar.localization;
+
+import "modules/common/proto/header.proto";
+import "modules/msgs/drivers/novatel/proto/pose.proto";
+
+message CorrectedImu {
+  optional roadstar.common.Header header = 1;
+
+  // Inertial Measurement Unit(IMU)
+  optional roadstar.localization.Pose imu = 3;
+}

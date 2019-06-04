@@ -1,0 +1,24 @@
+syntax = "proto2";
+package roadstar.canbus;
+
+import "modules/msgs/canbus/proto/chassis.proto";
+import "modules/msgs/canbus/proto/vehicle_parameter.proto";
+import "modules/msgs/canbus/proto/dongfeng.proto";
+import "modules/msgs/canbus/proto/dongfeng_v2.proto";
+import "modules/msgs/canbus/proto/hongqi.proto";
+import "modules/msgs/canbus/proto/hongqi_v2.proto";
+import "modules/msgs/canbus/proto/trumpchi.proto";
+import "modules/msgs/canbus/proto/jiefang.proto";
+
+message ChassisDetail {
+  optional Chassis.DrivingMode acu_driving_mode = 1;
+  optional VehicleParameter.VehicleBrand brand = 2;
+
+  // car type specific
+  optional dongfeng.Dongfeng dongfeng = 3;
+  optional dongfeng_v2.DongfengV2 dongfeng_v2 = 4;
+  optional hongqi.Hongqi hongqi = 5;
+  optional trumpchi.Trumpchi trumpchi = 6;
+  optional hongqi_v2.HongqiV2 hongqi_v2 = 7;
+  optional jiefang.Jiefang jiefang = 8;
+}

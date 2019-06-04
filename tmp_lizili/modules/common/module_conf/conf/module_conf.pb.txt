@@ -1,0 +1,317 @@
+modules {
+  name: "camera_driver"
+  process_conf {
+    process_cmd_keywords: "modules/drivers_v2/camera/camera_driver"
+  }
+  supported_commands {
+    key: "start"
+    value: "scripts/camera_v2.sh"
+  }
+  supported_commands {
+    key: "stop"
+    value: "scripts/camera_v2.sh stop"
+  }
+  adapter_conf_path: "modules/drivers_v2/camera/conf/adapter.conf"
+}
+
+modules {
+  name: "asensing"
+  process_conf {
+    process_cmd_keywords: "modules/drivers/gnss/asensing/asensing"
+  }
+  supported_commands {
+    key: "start"
+    value: "scripts/deprecated/asensing.sh start"
+  }
+  supported_commands {
+    key: "stop"
+    value: "scripts/deprecated/asensing.sh stop"
+  }
+  adapter_conf_path: "modules/drivers/gnss/asensing/conf/adapter.conf"
+}
+
+modules {
+  name: "gnss_driver"
+  process_conf {
+    process_cmd_keywords: "modules/drivers_v2/gnss/gnss_driver"
+  }
+  supported_commands {
+    key: "start"
+    value: "scripts/gnss.sh start"
+  }
+  supported_commands {
+    key: "stop"
+    value: "scripts/gnss.sh stop"
+  }
+  adapter_conf_path: "modules/drivers_v2/gnss/conf/adapter.conf"
+}
+
+modules {
+  name: "radar_driver"
+  process_conf {
+    process_cmd_keywords: "modules/drivers_v2/radar/radar_driver"
+  }
+  supported_commands {
+    key: "start"
+    value: "scripts/radar.sh start"
+  }
+  supported_commands {
+    key: "stop"
+    value: "scripts/radar.sh stop"
+  }
+  adapter_conf_path: "modules/drivers_v2/radar/conf/adapter.conf"
+}
+
+modules {
+  name: "lidar_driver"
+  process_conf {
+    process_cmd_keywords: "modules/drivers_v2/lidar/lidar_driver"
+  }
+  supported_commands {
+    key: "start"
+    value: "scripts/lidar.sh start "
+  }
+  supported_commands {
+    key: "stop"
+    value: "scripts/lidar.sh stop"
+  }
+  adapter_conf_path: "modules/drivers_v2/lidar/conf/adapter.conf"
+}
+
+modules {
+  name: "localization"
+  process_conf {
+    process_cmd_keywords: "modules/localization/localization"
+  }
+  supported_commands {
+    key: "start"
+    value: "scripts/localization.sh start"
+  }
+  supported_commands {
+    key: "stop"
+    value: "scripts/localization.sh stop"
+  }
+  adapter_conf_path: "modules/localization/conf/adapter.conf"
+}
+
+modules {
+  name: "vehicle"
+  process_conf {
+    process_cmd_keywords: "modules/vehicle/vehicle"
+  }
+  supported_commands {
+    key: "start"
+    value: "scripts/vehicle.sh start"
+  }
+  supported_commands {
+    key: "stop"
+    value: "scripts/vehicle.sh stop"
+  }
+  adapter_conf_path: "modules/vehicle/conf/adapter.conf"
+}
+
+modules {
+  name: "control"
+  process_conf {
+    process_cmd_keywords: "modules/control/control"
+  }
+  supported_commands {
+    key: "start"
+    value: "scripts/control.sh start"
+  }
+  supported_commands {
+    key: "stop"
+    value: "scripts/control.sh stop"
+  }
+  adapter_conf_path: "modules/control/conf/adapter.conf"
+}
+
+modules {
+  name: "hdmap"
+  process_conf {
+    process_cmd_keywords: "modules/hdmap/hdmap"
+  }
+  supported_commands {
+    key: "start"
+    value: "scripts/hdmap.sh start"
+  }
+  supported_commands {
+    key: "stop"
+    value: "scripts/hdmap.sh stop"
+  }
+}
+
+modules {
+  name: "perception_v2"
+  process_conf {
+    process_cmd_keywords: "modules/perception_v2/perception"
+  }
+  supported_commands {
+    key: "start"
+    value: "scripts/perception_city.sh start"
+  }
+  supported_commands {
+    key: "stop"
+    value: "scripts/perception_city.sh stop"
+  }
+  adapter_conf_path: "modules/perception_v2/conf/adapter.conf"
+}
+
+modules {
+  name: "localization_v2"
+  process_conf {
+    process_cmd_keywords: "modules/localization_v2/localization"
+  }
+  supported_commands {
+    key: "start"
+    value: "scripts/localization_v2.sh start"
+  }
+  supported_commands {
+    key: "stop"
+    value: "scripts/localization_v2.sh stop"
+  }
+  adapter_conf_path: "modules/localization_v2/conf/adapter.conf"
+}
+
+modules {
+  name: "planning"
+  process_conf {
+    process_cmd_keywords: "modules/planning/planning"
+  }
+  supported_commands {
+    key: "start"
+    value: "scripts/planning.sh start"
+  }
+  supported_commands {
+    key: "stop"
+    value: "scripts/planning.sh stop"
+  }
+  adapter_conf_path: "modules/planning/conf/adapter.conf"
+}
+
+modules {
+  name: "planning_v2"
+  process_conf {
+    process_cmd_keywords: "modules/planning_v2/planning"
+  }
+  supported_commands {
+    key: "start"
+    value: "scripts/planning_v2.sh start"
+  }
+  supported_commands {
+    key: "stop"
+    value: "scripts/planning_v2.sh stop"
+  }
+  adapter_conf_path: "modules/planning_v2/conf/adapter.conf"
+}
+
+
+modules {
+  name: "rosbag",
+  process_conf {
+    process_cmd_keywords: "record"
+  }
+}
+
+modules {
+  name: "dreamview",
+  process_conf {
+    process_cmd_keywords: "dreamview"
+  }
+  supported_commands {
+    key: "start"
+    value: "scripts/dreamview.sh start"
+  }
+  supported_commands {
+    key: "stop"
+    value: "scripts/dreamview.sh stop"
+  }
+  adapter_conf_path: "modules/dreamview/conf/adapter.conf"
+}
+
+modules {
+  name: "record_bag",
+  process_conf {
+    process_cmd_keywords: "message"
+    process_cmd_keywords: "record_bag"
+  }
+  adapter_conf_path: "modules/common/message/tools/conf/record_bag.conf"
+}
+
+modules {
+  name: "play_bag",
+  process_conf {
+    process_cmd_keywords: "message"
+    process_cmd_keywords: "play_bag"
+  }
+  send_all: true
+  adapter_conf_path: "modules/common/message/tools/conf/play_bag.conf"
+}
+
+modules {
+  name: "simulation_world_node"
+  process_conf {
+    process_cmd_keywords: "simulation_world_node_main"
+  }
+  supported_commands {
+    key: "start"
+    value: "scripts/simulation_world_node.sh start"
+  }
+  supported_commands {
+    key: "stop"
+    value: "scripts/simulation_world_node.sh stop"
+  }
+  adapter_conf_path: "modules/simulation/simulation_world/node/conf/adapter.conf"
+}
+
+modules {
+  name: "powertrain"
+  process_conf {
+    process_cmd_keywords: "powertrain"
+  }
+  supported_commands {
+    key: "start"
+    value: "scripts/powertrain.sh start"
+  }
+  supported_commands {
+    key: "stop"
+    value: "scripts/powertrain.sh stop"
+  }
+  adapter_conf_path: "modules/simulation/powertrain/server/conf/adapter.conf"
+}
+
+modules {
+  name: "echo_message",
+  process_conf {
+    process_cmd_keywords: "echo_message"
+  }
+  receive_all: true
+  adapter_conf_path: "modules/common/message/tools/conf/echo_message.conf"
+}
+
+modules {
+  name: "diagnose",
+  process_conf {
+    process_cmd_keywords: "diagnose"
+  }
+  adapter_conf_path: "modules/common/message/tools/conf/diagnose.conf"
+}
+
+modules {
+  name: "perception_integration",
+  process_conf {
+    process_cmd_keywords: "integration_test"
+    process_cmd_keywords: "perception"
+  }
+  adapter_conf_path: "modules/integration_test/perception/conf/adapter.conf"
+}
+
+modules {
+  name: "data_platform",
+  adapter_conf_path: "modules/data_platform/parse/conf/adapter.conf"
+}
+
+modules {
+  name: "map_v2"
+  adapter_conf_path: "modules/map_v2/conf/adapter.conf"
+}

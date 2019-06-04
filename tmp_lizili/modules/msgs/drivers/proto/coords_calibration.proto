@@ -1,0 +1,14 @@
+syntax = "proto2";    
+package roadstar.drivers;
+
+// Calibration from velodyne64 to ego-front.
+message CoordCalibration {
+  // transition matrix
+  optional double transform_x = 1;
+  optional double transform_y = 2;
+  optional double transform_z = 3;
+  optional double transform_theta = 4;
+  optional double transform_pitch = 5;
+  optional double transform_roll = 6;
+}
+

@@ -1,0 +1,19 @@
+syntax = "proto2";
+
+package roadstar.drivers.lidar;
+
+import "modules/common/proto/header.proto";
+
+message LidarPacket {
+  optional uint64 stamp = 1;
+  optional bytes data = 2;
+}
+
+message LidarScan {
+  optional roadstar.common.Header header = 1;
+
+  repeated LidarPacket firing_pkts = 4;
+  // for HDL32 and VLP16
+  repeated LidarPacket positioning_pkts = 5;
+  optional uint64 basetime = 6 [default = 0];
+}

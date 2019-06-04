@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<param>
+  <bag path="/private/data/raw_data/"  >
+    <nd name="300525.bag"/>
+    <nd name="300526.bag"/>
+    <nd name="300527.bag"/>
+    <nd name="300528.bag"/>
+  </bag>
+  <label path="/private/data/labeled_data/">
+    <nd name="300525.json"/>
+    <nd name="300526.json"/>
+    <nd name="300527.json"/>
+    <nd name="300528.json"/>
+  </label>
+  <transformed path="/private/data/labeled_data/transformed/" name="3005_25-28" />
+</param>

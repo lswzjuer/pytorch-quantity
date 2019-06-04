@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<param>
+  <bag path="/private/data/raw_data/"  >
+    <nd name="900032.bag"/>
+    <nd name="900033.bag"/>
+    <nd name="900034.bag"/>
+    <nd name="900035.bag"/>
+  </bag>
+  <label path="/private/data/labeled_data/">
+    <nd name="900032.json"/>
+    <nd name="900033.json"/>
+    <nd name="900034.json"/>
+    <nd name="900035.json"/>
+  </label>
+  <transformed path="/private/data/labeled_data/split/" name="9000_32-35" />
+</param>
+
+

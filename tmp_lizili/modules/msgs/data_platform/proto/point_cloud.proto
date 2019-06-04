@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package roadstar.dataplatform;
+
+message PointCloud {
+    repeated CloudPoint points = 1;
+}
+
+message CloudPoint {
+    float x = 1;
+    float y = 2;
+    float z = 3;
+    int64 intensity = 4;
+}

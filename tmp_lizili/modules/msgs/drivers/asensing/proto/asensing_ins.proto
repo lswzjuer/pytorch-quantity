@@ -1,0 +1,42 @@
+syntax = "proto2";
+
+package roadstar.drivers.asensing;
+
+import "modules/common/proto/header.proto";
+
+message AsensingIns {
+  optional roadstar.common.Header header = 1;
+  optional double vel_x = 7;
+  optional double vel_y = 8;
+  optional double vel_z = 9;
+
+  optional double acc_x = 10;
+  optional double acc_y = 11;
+  optional double acc_z = 12;
+
+  optional double angular_vel_x = 17;
+  optional double angular_vel_y = 18;
+  optional double angular_vel_z = 19;
+
+  optional double heading = 20;
+  optional double pitch = 21;
+  optional double roll = 22;
+
+  optional double utm_x = 23;
+  optional double utm_y = 24;
+  optional double utm_z = 25;
+  optional double lat = 45;  // latitude
+  optional double lon = 46;  // longitude
+
+  optional double latitude_std = 30;
+  optional double longitude_std = 31;
+  optional double height_std = 32;
+
+  optional double north_velocity_std = 33;
+  optional double east_velocity_std = 34;
+  optional double up_velocity_std = 35;
+
+  optional double roll_std = 36;
+  optional double pitch_std = 37;
+  optional double azimuth_std = 38;
+}

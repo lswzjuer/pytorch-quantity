@@ -1,0 +1,23 @@
+living_modules {
+  name: "record_bag"
+  endpoint: "/tmp/record_bag.sock"
+  optional: true
+}
+
+living_modules {
+  name: "play_bag"
+  endpoint: "/tmp/play_bag.sock"
+  optional: true
+}
+
+living_modules {
+  name: "echo_message"
+  endpoint: "/tmp/echo_message.sock"
+  optional: true
+}
+
+living_modules {
+  name: "diagnose"
+  endpoint: "/tmp/diagnose.sock"
+  optional: true
+}

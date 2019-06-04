@@ -1,0 +1,45 @@
+syntax = "proto2";
+
+package roadstar.perception;
+
+import "modules/common/proto/header.proto";
+
+// EGO points
+message EgoPoint {
+  optional double egox = 1 [default = nan];
+  optional double egoy = 2 [default = nan];
+  optional double confidence = 3 [default = 0];
+}
+
+message Lane {
+  enum LaneType {
+    OTHER_LANE_TYPE = 0;   // 其他类型
+    SOLID_WHITE = 1;       // 白色实线
+    DOTTED_WHITE = 2;      // 白色虚线
+    MIXED_WHITE = 3;       // 白色虚实混合线
+    SINGLE_EDGE = 4;       // 一般路沿
+    SOLID_WHITE_EDGE = 5;  // 白色实线路沿
+    BARRICADE_EDGE = 6;    // 路障路沿
+    DOUBLE_YELLOW = 7;     // 双黄线
+  };
+
+  enum LanePos {
+    OTHER_LANE_POS = 0;  // 其他位置，检测所有车道线时备用
+    LEFT_TWO = 1;        // 左二车道线
+    LEFT_ONE = 2;        // 左一车道线
+    MIDDLE = 3;          // 中间车道线，只在车变道时存在
+    RIGHT_ONE = 4;       // 右一车道线
+    RIGHT_TWO = 5;       // 右二车道线
+    LEFT_EDGE = 6;       // 左侧路沿
+    RIGHT_EDGE = 7;      // 右侧路沿
+  };
+
+  optional LaneType lane_type = 1;
+  optional LanePos lane_pos = 2;
+  repeated EgoPoint lane_points = 3;
+}
+
+message LaneDetection {
+  optional roadstar.common.Header header = 1;
+  repeated Lane lane = 2;
+}

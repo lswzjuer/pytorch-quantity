@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<param>
+  <bag path="/onboard_data/bags/wuzhen_data/truck02/20181125/1115/"  >
+    <nd name="truck2_2018-11-25-11-22-12_7.bag" />
+  </bag>
+  <traffic_light path="resources/integration_test/traffic_lights/truck2/" >
+    <nd name="7"/>
+  </traffic_light>
+  <drive_scene value="city"/>
+  <test_object value="2"/>
+  <vehicle name="truck2"/>
+  <mid_files path="/roadstar/modules/integration_test/perception/test_cases/mid_files/traffic_light_test_7/" />
+  <traffic_light_report path="/roadstar/modules/integration_test/perception/test_cases/mid_files/traffic_light_test_7/report/" name="traffic_light_test_7.report" />
+  <map_conf map_name="zhendong_wuzhen" routing="go"/>
+  <calibration source="/onboard_data/bags/hangzhou_data/truck02/20180925/1551/calibration/shiyan_truck2"  dest="modules/calibration/data/shiyan_truck_jenkins"/>
+  <use_camera value="false" />
+  <perception value="2" />
+  <limit_distance forward="70" back="-40" />
+</param>

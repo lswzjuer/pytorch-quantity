@@ -1,0 +1,76 @@
+syntax = "proto2";
+package roadstar.canbus.trumpchi;
+
+import "modules/msgs/canbus/proto/chassis.proto";
+
+message Trumpchi {
+  optional Eps eps = 1;
+  optional Epb epb = 2;
+  optional Vcu vcu = 3;
+  optional Esp esp = 4;
+  optional Bcm bcm = 5; optional LastUpdatedTime last_updated_time = 6;
+}
+
+message LastUpdatedTime {
+  optional int64 throttle_rx_0 = 1;
+  optional int64 throttle_rx_1 = 2;
+  optional int64 throttle_rx_2 = 3;
+  optional int64 steering_rx_0 = 4;
+  optional int64 steering_rx_1 = 5;
+  optional int64 brake_rx_0 = 6;
+  optional int64 brake_rx_1 = 7;
+  optional int64 brake_rx_2 = 8;
+  optional int64 parking_rx_0 = 9;
+  optional int64 misc_rx_0 = 10;
+}
+
+message Eps {
+  optional int32 steering_mode = 1 [default = 0]; 
+  optional bool steering_warn_lamp = 2 [default = false];
+  optional double steering_angle = 3 [default = 0];
+  optional double steering_wheel_torque = 4 [default = 0];
+  optional int32 steering_angle_speed = 5 [default = 0];
+  optional bool steering_fault = 6 [default = false];
+}
+
+message Epb {
+  optional int32 epb_status = 1 [default = 0];
+}
+
+message Vcu {
+  // throttle 0
+  optional int32 drive_mode = 1 [default = 0];
+  optional double driving_torque= 2 [default = 0];
+  optional Chassis.GearPosition gear_position= 3;
+  optional int32 epb_status = 4;
+  optional int32 emergency_stop = 5;
+  optional int32 soft_stop = 6;
+  // throttle 1
+  optional double minimum_torque = 7;
+  optional double maximum_torque = 8;
+  // throttle 1
+  optional double throttle_pedal_position= 9;
+
+}
+
+message Esp {
+  // brake 0
+  optional double brake_pedal_position = 2;
+  // brake 1 
+  optional bool vehicle_speed_valid = 3 [default = false];
+  optional double vehicle_speed= 4;
+  // brake 2
+  optional double wheelspeed_leftfront = 5;
+  optional double wheelspeed_rightfront = 6;
+  optional double wheelspeed_leftrear = 7;
+  optional double wheelspeed_rightrear = 8;
+
+}
+
+message Bcm {
+  optional bool left_turn_light = 1 [default = false];
+  optional bool right_turn_light = 2 [default = false];
+  optional bool low_beam = 3 [default = false];
+  optional bool high_beam = 4 [default = false];
+  optional bool horn = 5 [default = false];
+}

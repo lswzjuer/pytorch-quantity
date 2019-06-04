@@ -1,0 +1,34 @@
+syntax = "proto2";                                                              
+ 
+package roadstar.drivers;
+
+// Calibration from radar to ego-front.
+message RadarConfig {   
+  // esr
+  optional double esr_phi = 1;
+  optional double esr_x = 2;
+  optional double esr_y = 3;
+  optional double esr_z = 4;
+  
+  // rsds
+  optional double front_left_phi = 5;
+  optional double front_left_x = 6;
+  optional double front_left_y = 7;
+  optional double front_left_z = 8;
+
+  optional double front_right_phi = 9;
+  optional double front_right_x = 10;
+  optional double front_right_y = 11;
+  optional double front_right_z = 12;
+
+  optional double tail_left_phi = 13;
+  optional double tail_left_x = 14;
+  optional double tail_left_y = 15;
+  optional double tail_left_z = 16;
+
+  optional double tail_right_phi = 17;
+  optional double tail_right_x = 18;
+  optional double tail_right_y = 19;
+  optional double tail_right_z = 20;
+}
+

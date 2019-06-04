@@ -1,0 +1,15 @@
+syntax = "proto2";
+
+package roadstar.common;
+
+message ConfigTest {
+  message Header {
+    required int32 id = 1;
+  }
+  required Header header = 1;
+  optional string name = 2;
+}
+
+message ConfigTest2 {
+  optional string test = 1;
+}

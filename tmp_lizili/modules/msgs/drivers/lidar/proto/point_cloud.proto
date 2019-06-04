@@ -1,0 +1,22 @@
+syntax = "proto2";
+package roadstar.drivers.lidar;
+
+import "modules/common/proto/header.proto";
+
+message LidarPoint {
+  optional float x = 1 [default = nan];
+  optional float y = 2 [default = nan];
+  optional float z = 3 [default = nan];
+  optional uint32 intensity = 4 [default = 0];
+  optional uint64 timestamp = 5 [default = 0];
+  optional float theta = 6 [default = nan];
+  optional uint32 ring = 7 [default = 0];
+}
+
+message PointCloud {
+  optional roadstar.common.Header header = 1;
+  repeated LidarPoint points = 2;
+  optional bool is_dense = 3;
+  optional uint32 width = 4;
+  optional uint32 height = 5;
+}

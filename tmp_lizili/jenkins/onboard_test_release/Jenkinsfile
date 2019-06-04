@@ -1,0 +1,28 @@
+pipeline {
+  agent {
+    label 'Production'
+  }
+  options {
+    timeout(time: 1, unit: 'HOURS')
+  }
+  stages {
+    stage('Submodule') {            
+      steps {                
+        echo 'Set submodule'            
+        sh './jenkins/onboard_test_release/scripts/set_submodule.sh'                
+      }        
+    }        
+    stage('Build') {            
+      steps {                
+        echo 'Building'            
+        sh './jenkins/onboard_test_release/scripts/build.sh'                
+      }        
+    }        
+    stage('Deploy') {            
+      steps {                
+        echo 'Deploy'            
+        sh './jenkins/onboard_test_release/scripts/deploy.sh'                
+      }        
+    }        
+  }
+}

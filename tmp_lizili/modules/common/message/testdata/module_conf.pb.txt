@@ -1,0 +1,27 @@
+modules {
+  name: "module_a"
+  adapter_conf_path: "modules/common/message/testdata/module_a.conf"
+}
+modules {
+  name: "module_b"
+  # Missing
+  adapter_conf_path: "modules/common/message/testdata/module_b.conf"
+}
+modules {
+  name: "module_c"
+  adapter_conf_path: "modules/common/message/testdata/module_c.conf"
+}
+modules {
+  name: "module_d"
+  send_all: true
+  adapter_conf_path: "modules/common/message/testdata/module_d.conf"
+}
+modules {
+  name: "module_e"
+  adapter_conf_path: "modules/common/message/testdata/module_e.conf"
+}
+modules {
+  name: "module_f"
+  receive_all: true
+  adapter_conf_path: "modules/common/message/testdata/module_f.conf"
+}

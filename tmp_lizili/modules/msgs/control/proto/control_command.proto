@@ -1,0 +1,47 @@
+syntax = "proto2";
+package roadstar.control;
+
+import "modules/msgs/canbus/proto/chassis.proto";
+import "modules/common/proto/header.proto";
+import "modules/msgs/control/proto/pad_msg.proto";
+
+message ControlCommand {
+  optional roadstar.common.Header header = 1;
+
+  // target throttle in percentage [0, 100]
+  optional double throttle = 2 [default = 0];
+
+  // unused, target brake in percentage [0, 100]
+  optional double brake = 3 [default = 0];
+
+  // target non-directional steering rate
+  optional double steering_rate = 4 [default = 400];
+
+  // target steering angle
+  optional double steering_target = 5 [default = 0];
+
+  // parking brake engage. true: engaged
+  optional bool parking_brake = 6 [default = true];
+
+  // unused, target speed, in km/h
+  optional double speed = 7 [default = 0];
+
+  // unused, target acceleration in m`s^-2
+  optional double acceleration = 8 [default = 0];
+
+  // target deceleration
+  optional double deceleration = 9 [default = 0]; 
+
+  // gear position
+  optional roadstar.canbus.Chassis.GearPosition gear_location = 10 [default = GEAR_NEUTRAL];
+
+  // ipc signal
+  optional roadstar.canbus.Signal signal = 11;
+
+  // auto driving mode control
+  optional PadMessage pad_msg = 12;
+
+  // if the brake signal is emergency
+  optional bool emergency_brake = 13 [default = false];
+}
+

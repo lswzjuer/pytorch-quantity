@@ -1,0 +1,15 @@
+syntax = "proto2";
+
+package roadstar.dreamview;
+
+message BagTime {
+  optional double current = 1;
+  optional double total = 2;
+}
+
+message BagData {
+  optional string current_path = 1;
+  optional string current_bag = 2;
+  repeated string path_bags = 3;
+  repeated string sub_directories = 4;
+}

@@ -1,0 +1,13 @@
+syntax = "proto2";
+
+package roadstar.common.util.test;
+
+message Foo {
+  optional string foo = 1;
+}
+
+message SimpleMessage {
+  optional int32 integer = 1;
+  optional string text = 2;
+  map<string, Foo> test_map = 3;
+}

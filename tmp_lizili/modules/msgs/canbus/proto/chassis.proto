@@ -1,0 +1,92 @@
+syntax = "proto2";
+
+package roadstar.canbus;
+
+import "modules/common/proto/header.proto";
+
+message Signal {
+  enum TurnSignal {
+    TURN_NONE = 0;
+    TURN_LEFT = 1;
+    TURN_RIGHT = 2;
+  };
+  optional TurnSignal turn_signal = 1;
+  // lights enable command
+  optional bool high_beam = 2;
+  optional bool low_beam = 3;
+  optional bool horn = 4;
+  optional bool emergency_light = 5;
+}
+
+// next id :28
+message Chassis {
+  enum DrivingMode {
+    // human drive
+    COMPLETE_MANUAL = 0;
+    COMPLETE_AUTO_DRIVE = 1;
+    // security mode when manual intervention happens, only response status
+    EMERGENCY_MODE = 2;
+    AUTO_STEER_ONLY = 3;  // only steer
+    AUTO_SPEED_ONLY = 4;  // include throttle and brake
+    AUTO_MISC_ONLY = 5;   // only misc
+  }
+
+  enum ErrorCode {
+    NO_ERROR = 0;
+    // ecu not ready
+    ECU_NOT_READY = 1;
+    // car chassis report error, like steer, brake, throttle, gear fault
+    CHASSIS_ERROR = 2;
+    // human manual intervention
+    MANUAL_INTERVENTION = 3;
+    // receive car chassis can frame not in period
+    CHASSIS_CAN_NOT_IN_PERIOD = 4;
+    // control cmd not in period
+    CONTROL_MESSAGE_LOST = 5;
+    UNKNOWN_ERROR = 6;
+    // Start conditions unsatisfied
+    STEERING_ANGLE_TOO_LARGE = 7;
+    AUTO_SWITCH_OFF = 8;
+    VEHICLE_SPEED_TOO_LARGE = 9;
+    PARKING_BRAKE_NOT_RELEASED = 10;
+    GEAR_IN_WRONG_POSITION = 11;
+  }
+
+  enum GearPosition {
+    GEAR_PARKING = 0;
+    GEAR_REVERSE = 1;
+    GEAR_NEUTRAL = 2;
+    GEAR_DRIVE = 3;
+    GEAR_LOW = 4;
+    GEAR_NONE = 5;
+    GEAR_INVALID = 6;
+  }
+
+  enum Status {
+    OFF = 0;
+    ON = 1;
+    ERR = 2;
+    RESERVE = 3;
+  }
+
+  optional roadstar.common.Header header = 1;
+  // EPS
+  optional double steering_angle_speed_executed = 2 [default = 0];
+  optional double steering_angle_executed = 3 [default = 0];
+  // ESP
+  optional double front_axle_speed = 4 [default = 0];
+  optional double wheelspeed_leftfront = 5 [default = 0];
+  optional double wheelspeed_rightfront = 6 [default = 0];
+  optional double wheelspeed_leftrear = 7 [default = 0];
+  optional double wheelspeed_rightrear = 8 [default = 0];
+  // vcu
+  optional double vehicle_speed = 9 [default = 0];
+  optional double motor_rpm = 10 [default = nan];
+  optional double motor_torque = 11 [default = nan];
+  optional int32 chassis_error_mask = 12 [default = 0];
+  optional ErrorCode error_code = 13 [default = NO_ERROR];
+  optional DrivingMode driving_mode = 14 [default = COMPLETE_MANUAL];
+  optional GearPosition gear_position = 15 [default = GEAR_NEUTRAL];
+  optional Status left_turn_lamp = 16 [default = OFF];
+  optional Status right_turn_lamp = 17 [default = OFF];
+}

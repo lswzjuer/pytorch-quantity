@@ -1,0 +1,13 @@
+syntax = "proto2";
+
+package roadstar.planning;
+
+import "modules/common/proto/header.proto";
+
+message PlanningDebugInfo {
+    required roadstar.common.Header header = 1;
+    // append text in viewer
+    required bool append = 2;
+    // a list of text to show
+    repeated string text = 3;
+}
