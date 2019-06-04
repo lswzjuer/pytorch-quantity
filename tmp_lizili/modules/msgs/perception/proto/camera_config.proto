@@ -1,9 +1,0 @@
-syntax = "proto2";
-
-package roadstar.perception;
-
-message CameraConfig {
-    repeated int32 camera_vision_id = 1;
-    repeated int32 camera_tl_id = 2;
-    repeated int32 camera_lane_id = 3;
-}

@@ -1,7 +1,0 @@
-{
-  "base": "1ccaad9c0498fa4c31c057bdd14106551d174330",
-  "submodules": {
-    "modules/dreamview": "0ee942a9bc3f6af95f7001686d75a61b95b855b4",
-    "modules/perception_v2": "0ee942a9bc3f6af95f7001686d75a61b95b855b4"
-  }
-}

@@ -1,4 +1,0 @@
-can_card_brand: KVASER_CAN
-type: USB_CARD
-channel_id: CHANNEL_ID_ZERO
-bitrate: 500

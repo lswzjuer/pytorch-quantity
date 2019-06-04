@@ -1,3 +1,0 @@
-MODULE proto name conf_file
-CANBUS modules.canbus.proto.canbus_conf_pb2 CanbusConf() /roadstar/modules/canbus/conf/canbus_conf.pb.txt
-CONTROL modules.control.proto.control_conf_pb2 ControlConf() /roadstar/modules/control/conf/dongfeng.pb.txt

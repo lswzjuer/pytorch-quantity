@@ -1,7 +1,0 @@
-syntax = "proto2";
-
-package roadstar.dreamview;
-
-message PointCloud {
-    repeated float num = 1;
-}

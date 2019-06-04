@@ -1,5 +1,0 @@
-# common::ConfigTest
-header: {
-    id: 1
-}
-name: "a"

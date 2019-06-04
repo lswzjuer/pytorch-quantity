@@ -1,58 +1,116 @@
-# Roadstar
+# Roadtensor
 
-Welcome to the Roadstar.
+This project aims at providing the necessary building blocks for easily
+creating detection and segmentation models using Pytorch.
 
-## Installation
+## Highlights and Roadmap
 
-We strongly recommend building Roadstar in our pre-specified Docker environment.
-See the following instructions on how to set up the docker environment and build from source.
+- **PyTorch 1.1:**
+- **data preprocessing in GPU:**
+- **Mixed precision and distributed training:**
+- **Sparse Convolution:**  
+- **Inference optimziation for tensorRT, fabu-chips and FPGA:**  
+- **CPU and GPU efficient:**
+- **Suported task:**: lidar_fusion,vision2d, mono_depth, stereo_depth, parano_seg, traffic_light, traffic_lane, quantization, network prunning, online export.
+- **Tensorboard:**
+- **Remote vscode by [code-server](https://github.com/cdr/code-server):**
 
-### The docker environment can be set by the commands below.
+## Getting start
 
-Attention!!! The first, check your env variable USER, it should be equal to your user name, if not, please
-set it in your .bashrc
+### Getting in docker
 
-```shell
-# Check docker if exists
-$ which docker
-# If the os has NOT installed the docker, install docker first otherwise skip this step.
-bash docker/scripts/install_docker.sh
-# logout and login to make sure to run docker command without sudo
-$ docker ps
-# If there is an permission deny error message, add the user into docker group if you have the permission.
-$ sudo usermod -aG docker ${USER}
-# Start a docker container.
-$ bash docker/scripts/dev_start.sh
-# Get into the container.
-bash docker/scripts/dev_into.sh
-```
-### To build from source
+```bash
+# Setup docker env
+./docker/docker_start.sh
 
-```Shell
-# Build without optimization
-$ bash roadstar.sh build
-# Build with optimization
-$ bash roadstar.sh build_opt
-# Build with GPU support
-$ bash roadstar.sh build_opt_gpu
+# Enter docker env
+./docker/docker_into.sh
 ```
 
-## Run Roadstar
-Follow the steps below to launch Roadstar:
-### Start Roadstar
+### Multi-GPU training
 
-```shell
-# Get the latest release version.
-$ bash scripts/update_release.sh
-# Start the dreamview.
-$ cd release && bash scripts/dreamview.sh
-# Checkout the dreamview port (For develop container only).
-# The release dreamview will be 8888 port.
-# Exit the docker container first.
-$ ./docker/scripts/check_port.sh
-ssh:32773
-dreamview:32772
-# Now the dreamview is running on the 32773 port (The port will change if you restart the docker).
+We use internally `torch.distributed.launch` in order to launch
+multi-gpu training. This utility function from PyTorch spawns as many
+Python processes as the number of GPUs we want to use, and each Python
+process will only use a single GPU.
+
+```bash
+export NGPUS=8
+python -m torch.distributed.launch --nproc_per_node=$NGPUS /path_to_lidar/tools/train_net.py --config-file "path/to/config/file.yaml"
 ```
-### Access Dreamview
-Access dreamview by opening your favorite browser (Chrome recommended).
+
+### Perform training on coco dataset with RetinaNet
+
+```bash
+ln -s /private/liuzili/data/coco /datasets/coco
+chmod +x train.sh
+./train.sh
+```
+
+### Remote features
+
+```bash
+# check ports
+cat ~/.roadtensor_port
+
+# 1). Connect your docker directly from remote with the ssh port, for example
+ssh -X -p 32768 xxx@192.168.3.xxx
+
+# 2). Edit your code with the vscode port,
+# open your browser and enter "localhost:port" or "your-ip:port"
+
+# 3). Monitor your traning loss with the tensorboardX port
+tensorboard --logdir=models/log
+# check your localhost:port or your-ip:port
+```
+
+## Adding your own tasks
+
+## Adding your own dataset
+
+This implementation adds support for COCO-style datasets.
+But adding support for training on a new dataset can be done as follows:
+
+```python
+from lidar.structures.bounding_box import BoxList
+
+class MyDataset(object):
+    def __init__(self, ...):
+        # as you would do normally
+
+    def __getitem__(self, idx):
+        # load the image as a PIL Image
+        image = ...
+
+        # load the bounding boxes as a list of list of boxes
+        # in this case, for illustrative purposes, we use
+        # x1, y1, x2, y2 order.
+        boxes = [[0, 0, 10, 10], [10, 20, 50, 50]]
+        # and labels
+        labels = torch.tensor([10, 20])
+
+        # create a BoxList from the boxes
+        boxlist = BoxList(boxes, image.size, mode="xyxy")
+        # add the labels to the boxlist
+        boxlist.add_field("labels", labels)
+
+        if self.transforms:
+            image, boxlist = self.transforms(image, boxlist)
+
+        # return the image, the boxlist and the idx in your dataset
+        return image, boxlist, idx
+
+    def get_img_info(self, idx):
+        # get img_height and img_width. This is used if
+        # we want to split the batches according to the aspect ratio
+        # of the image, as it can be more efficient than loading the
+        # image from disk
+        return {"height": img_height, "width": img_width}
+```
+
+That's it. You can also add extra fields to the boxlist, such as segmentation masks
+(using `structures.segmentation_mask.SegmentationMask`), or even your own instance type.
+
+## Contirbution
+
+See [Contribution](http://git.fabu.ai/roadtensor/roadtensor/blob/master/contribution.md).

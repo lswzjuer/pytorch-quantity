@@ -1,0 +1,13 @@
+# Quantizer
+
+*This folder includes tools to quantize the pytorch models.* Tools are composed of three parts: weight-quantizer , activation-quantizer and rewriter. 
+
+In general, it's very simple to quantize the weights in the model since this job can be done layer by layer without any limitation between these layers. However, things are different when quantize the activations. For example, the quantize-bit of input feature maps of `Concat / Eltwise` layers must be same. So the activation-quantizer have to realize the network structure, which will bring some limitations.
+
+If you want to quantize a model, the following pipline is suggested:
+
+1. Set `configs.yml`.
+2. Use `python roadtensor/components/tools/quantity/weight_quantizer.py` to generate weight tabel, weight directory and bias directory. You can set larger `WORKER_NUM` in `configs.yml` to speed up the quantization.
+3. Simultaneously with 2, you can use `python roadtensor/components/tools/quantity/activation_quantizer.py` to generate activation (or you can say blob or feature) tabel. `WORKER_NUM` is also available. Note that you can change the order of step 2 and step 3 or excute them at the same time.
+4. At last, use  `python roadtensor/components/tools/quantity/rewriter.py` to handle the remain limitations of our chip, e.g. `weight_bit + input_bit - output_bit <= 12` and `bias_bit == output_bit`. 
+
