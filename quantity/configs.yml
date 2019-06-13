@@ -1,0 +1,18 @@
+OUTPUT:
+    WORK_DIR: ./workdir
+    WEIGHT_BIT_TABLE: ./workdir/weight.table
+    FEAT_BIT_TABLE: ./workdir/feat.table
+    WEIGHT_DIR: ./workdir/weight
+    BIAS_DIR: ./workdir/bias
+    FINAL_WEIGHT_DIR: ./workdir/new_weight
+    FINAL_BIAS_DIR: ./workdir/new_bias
+
+SETTINGS:
+    GPU: 0
+    WORKER_NUM: 12
+    INTERVAL_NUM: 2048
+    STATISTIC: 1
+    MAX_CALI_IMG_NUM: 4
+    MAX_SHIFT: 12
+    SUPPORT_DILATION: False
+    MERGE_FREEZEBN: False

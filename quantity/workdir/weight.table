@@ -1,0 +1,10 @@
+conv_0_weight 7
+conv_0_bias 8
+conv_3_weight 7
+conv_3_bias 3
+fc_0_weight 10
+fc_0_bias 3
+fc_1_weight 9
+fc_1_bias 3
+fc_2_weight 8
+fc_2_bias 2

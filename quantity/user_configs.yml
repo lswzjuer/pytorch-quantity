@@ -1,0 +1,19 @@
+PATH:
+    DATA_PATH: ./data/
+    MODEL_NET_PATH: ./model/lenet.py
+    MODEL_PATH: ./model/lenet.pth
+MODEL:
+    CLASS: Cnn
+    CLASS_PARAM:
+    INPUT_SHAPE: 1,1,28,28
+PRE_PROCESS:
+    IMG: FALSE
+    IMG_SET:
+      MEAN: 128
+      RESIZE: 22,22
+      SCALE: 0.0075
+    
+    
+
+
+
