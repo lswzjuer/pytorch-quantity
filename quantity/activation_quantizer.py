@@ -39,7 +39,7 @@ def tid(tensor):
 
 
 class Quantity(object):
-    def __init__(self):
+    def __init__(self,model):
         assert os.path.isfile("configs.yml"), "./configs.yml"
         assert os.path.isfile("user_configs.yml"), "./configs.yml"
 
@@ -59,7 +59,7 @@ class Quantity(object):
         cali_data_dir = self.user_config['PATH']['DATA_PATH']
 
         model_name = self.user_config['MODEL']['CLASS']
-        model_parameters = self.user_config['MODEL']['CLASS_PARAM']
+        # model_parameters = self.user_config['MODEL']['CLASS_PARAM']
         input_shape = self.user_config['MODEL']['INPUT_SHAPE'].split(',')
         
         module_list = net_path.split('/')
@@ -67,11 +67,12 @@ class Quantity(object):
         param = importlib.import_module(module_net)
         class_object = getattr(param, model_name)
         
-        if (model_parameters is None):
-            self.model = class_object()
-        else:
-            model_parameters = list(map(int, model_parameters.split(',')))
-            self.model = class_object(*model_parameters)
+        # if (model_parameters is None):
+        #     self.model = class_object()
+        # else:
+        #     model_parameters = list(map(int, model_parameters.split(',')))
+        #     self.model = class_object(*model_parameters)
+        self.model = model
         self.model.load_state_dict(torch.load(pth_path))
         self.input_size = list(map(int, input_shape))
         
@@ -105,7 +106,9 @@ class Quantity(object):
         def _make_hook(name):
             def _hook(m, input, output):
                 layer_type = type(m).__name__
-
+                print(name)
+                print(name_to_id)
+                print('********')
                 for t in input:
                     name_to_input_id[name].append(tid(t))
 
@@ -125,7 +128,10 @@ class Quantity(object):
 
         #input_var = torch.rand(1, 3, 256, 256)
         input_var = torch.rand(*self.input_size)
+        print('input shape:', input_var.shape)
+        
         _ = model(input_var)
+        print('forward end')
         for hook in hooks:
             hook.remove()
 

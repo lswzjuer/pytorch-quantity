@@ -41,7 +41,9 @@ class BiasReWriter:
         new_aligned_bits = {}
         for key in bias_bits.keys():
             bias_bit, feat_bit = bias_bits[key], feat_bits[key]
+            #new_aligned_bits[key] = min(bias_bit, feat_bit)
             new_aligned_bits[key] = min(bias_bit, feat_bit)
+
             print(colored("{}: ".format(key), 'green'), "{}, {} => {}".format(
                 bias_bit, feat_bit, new_aligned_bits[key]))
         return new_aligned_bits
@@ -189,14 +191,14 @@ def main():
                       'red'), empty_set)
 
     print(colored("Align bias bit:", 'cyan'))
-    new_aligned_bias = rewriter.bias_output_bit_align(bias_bits, feat_bits)
+    #new_aligned_bias = rewriter.bias_output_bit_align(bias_bits, feat_bits)
     # now, bias_bits == feat_bits == new_bias.
-    rewriter.rewrite_bias_table(bias_bits, new_aligned_bias)
-    rewriter.rewrite_bias_dir(bias_bits, new_aligned_bias)
+    rewriter.rewrite_bias_table(bias_bits, feat_bits)
+    rewriter.rewrite_bias_dir(bias_bits, feat_bits)
 
     print(colored("Add max shift limitation:", 'cyan'))
     new_weight = rewriter.max_shift_limit_weight(feat_bits, infeat_bits, weight_bits)
-    if not new_weight is True:
+    if new_weight:
         # now, weight_bits <= max_shift + output_bits - input_bits.
         rewriter.rewrite_weight_table(weight_bits, new_weight)
         rewriter.rewrite_weight_dir(weight_bits, new_weight)
