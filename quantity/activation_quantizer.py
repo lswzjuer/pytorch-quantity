@@ -98,6 +98,7 @@ class Quantity(object):
         def _make_hook(name):
             def _hook(m, input, output):
                 layer_type = type(m).__name__
+
                 for t in input:
                     name_to_input_id[name].append(tid(t))
 
@@ -219,7 +220,8 @@ class Quantity(object):
         return net_info_new
     
     def preprocess(self, image):
-        if (self.user_config['PRE_PROCESS']['IMG']):
+        data_option = int(self.user_config['PRE_PROCESS']['IMG'])
+        if (data_option== 0):
             mean = slef.user_config['PRE_PROCESS']['IMG_SET']['MEAN']
             resize = tuple(map(float, slef.user_config['PRE_PROCESS']['IMG_SET']['RESIZE'].split(',')))
             scale = slef.user_config['PRE_PROCESS']['IMG_SET']['SCALE']
@@ -232,8 +234,20 @@ class Quantity(object):
             img = img[np.newaxis, :]
             img = torch.tensor(img, dtype=torch.float).cuda()
             return img
-        else:
+        
+        elif(data_option == 1):
             return image
+        elif (data_option == 2):
+            np_img = np.load(image)
+            img = torch.tensor(np_img)
+            img = img.view(1, *img.shape)
+            return img
+
+        else:
+            print(colored("input option set wrong:",
+                        'red'), data_option)
+
+
 
     def net_forward(self, net, image_path):
      
