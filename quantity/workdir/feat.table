@@ -1,0 +1,6 @@
+image 7
+conv_0 8 7
+conv_3 3 8
+fc_0 3 3
+fc_1 3 3
+fc_2 2 3
