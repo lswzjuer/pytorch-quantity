@@ -35,19 +35,7 @@ class BiasReWriter:
 
     def get_feat_info(self):
         return self._bit_reader.get_feat_info()
-
-    def bias_output_bit_align(self, bias_bits, feat_bits):
-        # assume the feat bit is larger than bias bit.
-        new_aligned_bits = {}
-        for key in bias_bits.keys():
-            bias_bit, feat_bit = bias_bits[key], feat_bits[key]
-            #new_aligned_bits[key] = min(bias_bit, feat_bit)
-            new_aligned_bits[key] = feat_bit
-
-            print(colored("{}: ".format(key), 'green'), "{}, {} => {}".format(
-                bias_bit, feat_bit, new_aligned_bits[key]))
-        return new_aligned_bits
-
+        
     def rewrite_bias_dir(self, old_bias_bits, new_bias_bits):
         files_path = walk_dirs(self._bias_dir, file_type='.json')
         for file_path in files_path:

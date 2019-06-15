@@ -1,11 +1,9 @@
 PATH:
     DATA_PATH: ./data/
-    MODEL_NET_PATH: ./model/ResNet.py
-    MODEL_PATH: ./model/resnet50.pth
+    MODEL_NET_PATH: ./model/lenet.py
+    MODEL_PATH: ./model/lenet.pth
 MODEL:
-    CLASS: resnet50
-    CLASS_PARAM:
-    INPUT_SHAPE: 1,3,224,224
+    INPUT_SHAPE: 1,1,28,28
 PRE_PROCESS:
     IMG: FALSE
     IMG_SET:

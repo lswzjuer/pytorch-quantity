@@ -58,20 +58,12 @@ class Quantity(object):
         pth_path = self.user_config['PATH']['MODEL_PATH']  #weight path (.pth)
         cali_data_dir = self.user_config['PATH']['DATA_PATH']
 
-        model_name = self.user_config['MODEL']['CLASS']
-        # model_parameters = self.user_config['MODEL']['CLASS_PARAM']
         input_shape = self.user_config['MODEL']['INPUT_SHAPE'].split(',')
         
         module_list = net_path.split('/')
         module_net = module_list[1] + '.' + module_list[2][:-3]
         param = importlib.import_module(module_net)
-        class_object = getattr(param, model_name)
         
-        # if (model_parameters is None):
-        #     self.model = class_object()
-        # else:
-        #     model_parameters = list(map(int, model_parameters.split(',')))
-        #     self.model = class_object(*model_parameters)
         self.model = model
         self.model.load_state_dict(torch.load(pth_path))
         self.input_size = list(map(int, input_shape))
@@ -106,9 +98,6 @@ class Quantity(object):
         def _make_hook(name):
             def _hook(m, input, output):
                 layer_type = type(m).__name__
-                print(name)
-                print(name_to_id)
-                print('********')
                 for t in input:
                     name_to_input_id[name].append(tid(t))
 
@@ -458,7 +447,6 @@ class Quantity(object):
                         'red'), empty_set)
 
         print(colored("Align bias bit:", 'cyan'))
-        #new_aligned_bias = rewriter.bias_output_bit_align(bias_bits, feat_bits)
         # now, bias_bits == feat_bits == new_bias.
         rewriter.rewrite_bias_table(bias_bits, feat_bits)
         rewriter.rewrite_bias_dir(bias_bits, feat_bits)
