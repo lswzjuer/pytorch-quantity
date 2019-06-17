@@ -60,17 +60,17 @@ class Quantity(object):
 
         input_shape = self.user_config['MODEL']['INPUT_SHAPE'].split(',')
         
-        module_list = net_path.split('/')
-        module_net = module_list[1] + '.' + module_list[2][:-3]
-        param = importlib.import_module(module_net)
+        # module_list = net_path.split('/')
+        # module_net = module_list[1] + '.' + module_li         st[2][:-3]
+        # param = importlib.import_module(module_net)
         
         self.model = model
         self.model.load_state_dict(torch.load(pth_path))
-        self.input_size = list(map(int, input_shape))
+        self.input_size = tuple(map(int, input_shape))
         
-        self.net_info = self.build_net_structure(self.model)
+        self.net_info = self.build_net_structure(self.model, self.input_size)
 
-    def build_net_structure(self, model):
+    def build_net_structure(self, model, input_size, device='cpu'):
         """
         intput : 网络的model
         output:
@@ -95,35 +95,62 @@ class Quantity(object):
         name_to_type 
         (通过一次forward，注册hook)
         """
-        def _make_hook(name):
+        def register_hook(m):
+            
             def _hook(m, input, output):
+                
                 layer_type = type(m).__name__
-
+                
+                class_name = str(m.__class__).split(".")[-1].split("'")[0]
+                name_keys = "%s_%i" % (class_name, len(name_to_type) + 1)
                 for t in input:
-                    name_to_input_id[name].append(tid(t))
+                        name_to_input_id[name_keys].append(tid(t))
 
-                if name not in name_to_id:
-                    name_to_type[name] = layer_type
-                    name_to_id[name] = tid(output)
+                if name_keys not in name_to_id:
+                    name_to_type[name_keys] = layer_type
+                    name_to_id[name_keys] = tid(output)
                 else:
                     # share-param structure
                     raise NotImplementedError
+            if (
+                not isinstance(m, nn.Sequential)
+                and not isinstance(m, nn.ModuleList)
+                and not (m == model)
+            ):
+                hooks.append(m.register_forward_hook(_hook))
 
-            return _hook
 
-        for name, m in model.named_modules():
-            if type(m).__name__ in all_op_type:
-                hook = m.register_forward_hook(_make_hook(name))
-                hooks.append(hook)
+        device = device.lower()
+        assert device in [
+            "cuda",
+            "cpu",
+        ], "Input device is not valid, please specify 'cuda' or 'cpu'"
 
-        #input_var = torch.rand(1, 3, 256, 256)
-        input_var = torch.rand(*self.input_size)
-        print('input shape:', input_var.shape)
+        if device == "cuda" and torch.cuda.is_available():
+            dtype = torch.cuda.FloatTensor
+        else:
+            dtype = torch.FloatTensor
+
+        # multiple inputs to the network
+        if isinstance(input_size, tuple):
+            input_size = [input_size]
+
+        # batch_size of 1 for batchnorm
+        x = [torch.rand(*input_size).type(dtype) for in_size in input_size]
+        # print(type(x[0]))
+
+
+        # register hook
+        model.apply(register_hook)
+
+        # make a forward pass
+        # print(x.shape)
+        model(*x)
+
+        # remove these hooks
+        for h in hooks:
+            h.remove()
         
-        _ = model(input_var)
-        print('forward end')
-        for hook in hooks:
-            hook.remove()
 
         # since we use OrderDict, so we can just generate new id for repeat tensor and
         # modify the following ids to new one.
@@ -142,11 +169,11 @@ class Quantity(object):
                         modify_id[idx] = new_idx
                     else: 
                         raise ValueError("Same input and output id, the op {} is useful?".format(name))
-        # print('**********************************************')
-        # print('name_to_id',name_to_id)
-        # print('name_to_input_id',name_to_input_id)
-        # print('name_to_type',name_to_type)
-        # print('**********************************************')
+        print('**********************************************')
+        print('name_to_id',name_to_id)
+        print('name_to_input_id',name_to_input_id)
+        print('name_to_type',name_to_type)
+        print('**********************************************')
 
         if len(name_to_id) != len(set(name_to_id.values())):
             repeat_id = [item for item, count in Counter(name_to_id.values()).items() if count > 1]

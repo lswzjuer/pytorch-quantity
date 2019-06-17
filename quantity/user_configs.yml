@@ -1,9 +1,9 @@
 PATH:
     DATA_PATH: ./data/
-    MODEL_NET_PATH: ./model/lenet.py
-    MODEL_PATH: ./model/lenet.pth
+    MODEL_NET_PATH: ./model/test_debug/test_module.py
+    MODEL_PATH: ./model/test_debug/test_module.pth
 MODEL:
-    INPUT_SHAPE: 1,1,28,28
+    INPUT_SHAPE: 1,10,28,28
 PRE_PROCESS:
     IMG: 1  #0:imge 1:memory 2:datalist npy 
     IMG_SET:
