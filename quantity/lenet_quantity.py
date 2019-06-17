@@ -7,6 +7,7 @@ from model.lenet import Cnn
 
     
 def main():
+
     test_dataset = datasets.MNIST(
         root='./data', train=False, transform=transforms.ToTensor())
     test_loader = DataLoader(
@@ -15,7 +16,9 @@ def main():
     for data_list in test_loader:
         img, _ = data_list
         data_sets.append(img)
+
     model = Cnn(1,10)
+    
     test_lenet = activation_quantizer.Quantity(model)
     # test_lenet.activation_quantize(data_sets)
     #test_lenet.weight_quantize()
