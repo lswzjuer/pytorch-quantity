@@ -14,8 +14,7 @@ from collections import OrderedDict, defaultdict, Counter
 from termcolor import colored
 from rewriter import BiasReWriter
 from common.config import cfg
-from common.quantity import DistributionCollector, Quantizer, walk_dirs, merge_freezebn
-
+from common.quantity import DistributionCollector, Quantizer, walk_dirs, merge_bn
 
 
 def tid(tensor):
@@ -39,7 +38,9 @@ def tid(tensor):
 
 
 class Quantity(object):
+
     def __init__(self,model):
+
         assert os.path.isfile("configs.yml"), "./configs.yml"
         assert os.path.isfile("user_configs.yml"), "./configs.yml"
 

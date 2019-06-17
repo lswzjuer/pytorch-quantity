@@ -2,6 +2,7 @@ PATH:
     DATA_PATH: ./data/
     MODEL_NET_PATH: ./model/lenet.py
     MODEL_PATH: ./model/lenet.pth
+    QUANTITY_MODEL_PATH: ./model/quantity_lenet.pth
 MODEL:
     INPUT_SHAPE: 1,1,28,28
 PRE_PROCESS:

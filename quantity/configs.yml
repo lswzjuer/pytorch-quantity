@@ -16,3 +16,4 @@ SETTINGS:
     MAX_SHIFT: 12
     SUPPORT_DILATION: False
     MERGE_FREEZEBN: False
+    CARE_OP_TYPE: ['Conv2d', 'Linear', 'Eltwise', 'Concat']
