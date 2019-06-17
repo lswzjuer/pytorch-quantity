@@ -4,29 +4,62 @@ import torch.nn as nn
 from .quantity_layers import Identity
 
 
-def merge_freezebn(model):
+def merge_bn(model):
+
     conv_layer = None
     for name, layer in model.named_modules():
         # we assume the bn layer is defined right after the conv layer.
-        if type(layer).__name__ == 'Conv2d' and layer.bias is None:
-            assert conv_layer is None, "Please put bn right after the conv in your __init__()."
+        if type(layer).__name__ == 'Conv2d':
+            #assert conv_layer is None, "Please put bn right after the conv in your __init__()."
             conv_layer = layer
-        if type(layer).__name__ == 'FrozenBatchNorm2d':
+        if type(layer).__name__ == 'BatchNorm2d':
             assert conv_layer is not None, "Please put bn right after the conv in your __init__()."
-            assert conv_layer.bias is None, \
-                "The conv {} before freezebn {} has bias.".format(conv_layer, layer)
+            # assert conv_layer.bias is None, "The conv {} before freezebn {} has bias.".format(conv_layer, layer)
 
-            conv_layer.weight = nn.Parameter(conv_layer.weight * layer.weight.view(-1, 1, 1, 1))
-            conv_layer.bias = nn.Parameter(layer.bias)
+            # Propose BN parameter
+            alpha=layer.weight.data
+            beta=layer.bias.data
+            var=layer.running_var
+            mean=layer.running_mean
 
-            name_list = name.split('.')[:-1]
-            module = model
-            for n in name_list:
-                module = getattr(module, n)
-            module.add_module(name.split('.')[-1], Identity())
-            conv_layer = None
+            # Propose conv layer parameter
+            weight=conv_layer.weight
+            bias=conv_layer.bias
+
+            assert type(weight).__name__!="NoneType", "The conv weight can`t be None"
+            weight_data=weight.data
+            if type(bias).__name__=="NoneType":
+                bias_data=torch.zeros(size=[conv_layer.out_channels])
+            else:
+                bias_data=bias.data
+
+            # merge bn to conv layer
+            tmp = alpha / torch.sqrt(var + 1e-5)
+            new_weight = tmp.view(tmp.size()[0], 1, 1, 1)*weight_data
+            new_bias=tmp*(bias_data -mean ) + beta
+
+            # Modify convolution layer parameters
+            conv_layer.weight = nn.Parameter(new_weight)
+            conv_layer.bias = nn.Parameter(new_bias)
+
+            # Replace the BN layer with the Identity layer
+            find_module=model
+            name_split = name.split('.')
+            if len(name_split)==1:
+                find_module.add_module(name_split[0],Identity())
+                print(colored('The layer change: {} ==>Identity'.format(name),'green'))
+            elif len(name_split)>=2:
+                father_list=name_split[:-1]
+                for n in father_list:
+                    find_module=getattr(find_module,n)
+                find_module.add_module(name_split[-1], Identity())
+                print(colored('The layer change: {} ==>Identity'.format(name),'green'))
+            else:
+                raise ValueError("the layer name is wrong")
+
+            conv_layer=None
+
     return model
-
 
 def walk_dirs(dir_name, file_type=None):
     files_path = []
