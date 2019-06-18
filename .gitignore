@@ -38,6 +38,6 @@ dist/
 .vscode
 
 quantity/data
-.txt
-.bak
+*.txt
+*.bak
 workdir
