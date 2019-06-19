@@ -13,7 +13,6 @@ import json
 from collections import OrderedDict, defaultdict, Counter
 from termcolor import colored
 from rewriter import BiasReWriter
-from common.config import cfg
 from common.quantity import DistributionCollector, Quantizer, walk_dirs, merge_bn
 
 
