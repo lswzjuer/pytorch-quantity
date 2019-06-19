@@ -25,7 +25,7 @@ layer2.1.left.0.bias 6
 layer2.1.left.3.weight 9
 layer2.1.left.3.bias 5
 layer3.0.left.0.weight 10
-layer3.0.left.0.bias 5
+layer3.0.left.0.bias 6
 layer3.0.left.3.weight 9
 layer3.0.left.3.bias 5
 layer3.0.shortcut.0.weight 8

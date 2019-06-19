@@ -617,7 +617,7 @@ class Quantity(object):
             for n in name_list:
                 module = getattr(module, n)
 
-            param_np = param.detach().numpy()
+            param_np = param.detach().cpu().numpy()
 
             if name.endswith('weight') and isinstance(module, nn.Conv2d):
                 dilation = module.dilation

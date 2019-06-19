@@ -26,17 +26,7 @@ def main():
     seed = 100
     torch.manual_seed(seed)
     inputs = torch.rand(1, 3, 32, 32)
-    # out = model(inputs)
-    # out_np = out.detach().numpy()
-    # np.save('out.npy', out_np)
-
-
-    # for name, param in model.named_parameters():
-    #     print(name)
-    # print('[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[')
-    # for name, module in model.named_modules():
-    #     if(type(module).__name__ in ['Conv2d', 'Linear', 'Eltwise']):
-    #         print(name)
+    
 
     transform_test = transforms.Compose([
         transforms.ToTensor(),
@@ -51,7 +41,7 @@ def main():
     classes = ('plane', 'car', 'bird', 'cat', 'deer',
             'dog', 'frog', 'horse', 'ship', 'truck')
     test_lenet = activation_quantizer.Quantity(model)
-    test_lenet.activation_quantize(testloader)
+    #test_lenet.activation_quantize(testloader)
     test_lenet.weight_quantize()
     test_lenet.rewrite_weight()
 
