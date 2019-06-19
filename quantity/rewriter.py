@@ -39,7 +39,7 @@ class BiasReWriter:
     def rewrite_bias_dir(self, old_bias_bits, new_bias_bits):
         files_path = walk_dirs(self._bias_dir, file_type='.json')
         for file_path in files_path:
-            assert file_path.endswith('_bias.json'), file_path
+            assert file_path.endswith('.bias.json'), file_path
             layer_name = osp.basename(file_path)[:-10]
 
             if not layer_name in new_bias_bits.keys():
@@ -107,7 +107,7 @@ class BiasReWriter:
         files_path = walk_dirs(self._weight_dir, file_type='.json')
         print('files path:',files_path)
         for file_path in files_path:
-            assert file_path.endswith('_weight.json'), file_path
+            assert file_path.endswith('.weight.json'), file_path
             layer_name = osp.basename(file_path)[:-12]
 
             if not layer_name in new_weight_bits.keys():

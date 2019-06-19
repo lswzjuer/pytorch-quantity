@@ -1,4 +1,5 @@
 from termcolor import colored
+from collections import OrderedDict, defaultdict, Counter
 
 
 class BitReader:
@@ -36,7 +37,7 @@ class BitReader:
     def get_weight_info(self):
         assert self._weight_table
 
-        weight_bits, bias_bits = {}, {}
+        weight_bits, bias_bits = OrderedDict(), OrderedDict()
         count_weight, count_bias = 0, 0
 
         with open(self._weight_table, 'r') as f:
@@ -47,11 +48,11 @@ class BitReader:
             layer_name, bit = contents
             bit = int(eval(bit))
 
-            if layer_name.endswith('_weight'):
+            if layer_name.endswith('.weight'):
                 layer_name = layer_name[:-7]
                 count_weight += 1
                 weight_bits[layer_name] = bit
-            elif layer_name.endswith('_bias'):
+            elif layer_name.endswith('.bias'):
                 layer_name = layer_name[:-5]
                 count_bias += 1
                 bias_bits[layer_name] = bit

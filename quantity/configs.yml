@@ -12,8 +12,11 @@ SETTINGS:
     WORKER_NUM: 12
     INTERVAL_NUM: 2048
     STATISTIC: 1
-    MAX_CALI_IMG_NUM: 4
+    MAX_CALI_IMG_NUM: 10 
     MAX_SHIFT: 12
     SUPPORT_DILATION: False
     MERGE_FREEZEBN: False
     CARE_OP_TYPE: ['Conv2d', 'Linear', 'Eltwise', 'Concat']
+    ALL_OP_TYPE: ['Conv2d', 'Linear', 'Eltwise', 'Concat', 'MaxPool2d', 'ReLU', 'UpsamplingNearest2d', 'View', 'AvgPool2d']
+    ALLOW_SAME_TID_OP_TYPE: ['ReLU', 'UpsamplingNearest2d', 'View']
+    MERGE_OP_YTPE: ['Eltwise', 'Concat']

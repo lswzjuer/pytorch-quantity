@@ -5,16 +5,18 @@ import torchvision
 import torchvision.transforms as transforms
 import argparse
 from  ResNet_18 import ResNet18
-
+import os
 # 定义是否使用GPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+print(device)
 # 参数设置,使得我们能够手动输入命令行参数，就是让风格变得和Linux命令行差不多
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--outf', default='./model_res18/', help='folder to output images and model checkpoints') #输出结果保存路径
 parser.add_argument('--net', default='./model_res18/Resnet18.pth', help="path to net (to continue training)")  #恢复训练时的模型路径
 args = parser.parse_args()
-
+if(not os.path.exists(args.outf)):
+    os.makedirs(args.outf)
 # 超参数设置
 EPOCH = 135   #遍历数据集次数
 pre_epoch = 0  # 定义已经遍历数据集的次数
@@ -34,10 +36,10 @@ transform_test = transforms.Compose([
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
 
-trainset = torchvision.datasets.CIFAR10(root='~/data/CIFAR-10_DATA', train=True, download=True, transform=transform_train) #训练数据集
+trainset = torchvision.datasets.CIFAR10(root='/private/zhangjiwei/data/CIFAR-10_DATA', train=True, download=True, transform=transform_train) #训练数据集
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True, num_workers=2)   #生成一个个batch进行批训练，组成batch的时候顺序打乱取
 
-testset = torchvision.datasets.CIFAR10(root='~/data/CIFAR-10_DATA', train=False, download=True, transform=transform_test)
+testset = torchvision.datasets.CIFAR10(root='/private/zhangjiwei/data/CIFAR-10_DATA', train=False, download=True, transform=transform_test)
 testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=2)
 # Cifar-10的标签
 classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')

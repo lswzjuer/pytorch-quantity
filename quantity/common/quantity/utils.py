@@ -1,8 +1,8 @@
 import os
 import torch.nn as nn
-
-from .quantity_layers import Identity
-
+import torch
+from .fabu_layer import Identity
+from termcolor import colored
 
 def merge_bn(model):
 
@@ -34,9 +34,9 @@ def merge_bn(model):
                 bias_data=bias.data
 
             # merge bn to conv layer
-            tmp = alpha / torch.sqrt(var + 1e-5)
+            tmp = alpha / torch.sqrt(var + 1e-5).cuda()
             new_weight = tmp.view(tmp.size()[0], 1, 1, 1)*weight_data
-            new_bias=tmp*(bias_data -mean ) + beta
+            new_bias=tmp*(bias_data.cuda() -mean ) + beta
 
             # Modify convolution layer parameters
             conv_layer.weight = nn.Parameter(new_weight)
