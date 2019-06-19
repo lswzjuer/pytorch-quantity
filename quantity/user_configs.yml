@@ -1,18 +1,21 @@
 PATH:
     DATA_PATH: ./data/
-    MODEL_NET_PATH: ./model/lenet.py
-    MODEL_PATH: ./model/lenet.pth
+    MODEL_NET_PATH: ./model/resnet/ResNet_18_fabu.py
+    MODEL_PATH: ./model/resnet/resnet18.pth
     QUANTITY_MODEL_PATH: ./model/quantity_lenet.pth
 MODEL:
-    INPUT_SHAPE: 1,1,28,28
+    INPUT_SHAPE: 1,3,32,32
 PRE_PROCESS:
-    IMG: 1  #0:imge 1:memory 2:datalist npy 
+    IMG: 1  #0:imge 1:loader 2:datalist npy 
     IMG_SET:
       MEAN: 128
-      RESIZE: 22,22
+      RESIZE: 32,32
       SCALE: 0.0075
     
-    
+
+SETTINGS:
+    DEVICE: gpu 
+    GPU: 0 
 
 
 

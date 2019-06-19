@@ -9,11 +9,10 @@ import torch
 import importlib
 import torch.nn as nn
 import math
-
+import json
 from collections import OrderedDict, defaultdict, Counter
 from termcolor import colored
 from rewriter import BiasReWriter
-from common.config import cfg
 from common.quantity import DistributionCollector, Quantizer, walk_dirs, merge_bn
 
 
@@ -60,71 +59,120 @@ class Quantity(object):
         cali_data_dir = self.user_config['PATH']['DATA_PATH']
 
         input_shape = self.user_config['MODEL']['INPUT_SHAPE'].split(',')
-        
-        module_list = net_path.split('/')
-        module_net = module_list[1] + '.' + module_list[2][:-3]
-        param = importlib.import_module(module_net)
-        
-        self.model = model
-        self.model.load_state_dict(torch.load(pth_path))
-        self.input_size = list(map(int, input_shape))
-        
-        self.net_info = self.build_net_structure(self.model)
+        self.device = self.user_config['SETTINGS']['DEVICE']
+        if (self.device == 'gpu'):
+            gpu_id = self.user_config['SETTINGS']['GPU']
+            torch.cuda.set_device(gpu_id)
 
-    def build_net_structure(self, model):
+        # define the support ops and special ops
+        self._cared_op_type = self.config['SETTINGS']['CARE_OP_TYPE']
+        self._all_op_type = self.config['SETTINGS']['ALL_OP_TYPE']
+        self._allow_same_tid_op_type = self.config['SETTINGS']['ALLOW_SAME_TID_OP_TYPE']
+        self._merge_op_type = self.config['SETTINGS']['MERGE_OP_YTPE']
+        self._max_img_num = self.config['SETTINGS']['MAX_CALI_IMG_NUM']
+        print(colored('max_img_num', 'green'), self._max_img_num)
+        self.model = model
+        #self.model.load_state_dict(torch.load(pth_path))
+        self.input_size = tuple(map(int, input_shape))
+        self.layers_num = 0
+        self.name_to_param = OrderedDict()
+        self.net_info = self.build_net_structure(self.model, self.input_size, self.device)
+        
+        self.cared_op_layer_names= self.get_cared_op_names(self.model)
+
+    
+    def build_net_structure(self, model, input_size, device='cpu'):
         """
         intput : 网络的model
         output:
                 获取模型的信息，将不关心的层过滤掉，构建模型结果net_info:{intput, type}
 
         """
-        all_op_type = ['Conv2d', 'Linear', 'Eltwise', 'Concat', 'MaxPool2d', 'ReLU',
-                    'UpsamplingNearest2d', 'myView']
-        cared_op_type = ['Conv2d', 'Linear', 'Eltwise', 'Concat']
-        allow_same_tid_op_type = ['ReLU', 'UpsamplingNearest2d', 'myView']
+        # all_op_type = ['Conv2d', 'Linear', 'Eltwise', 'Concat', 'MaxPool2d', 'ReLU',
+        #                'UpsamplingNearest2d', 'View', 'AvgPool2d']
+        #cared_op_type = ['Conv2d', 'Linear', 'Eltwise', 'Concat']
+        cared_op_type = self._cared_op_type
+        all_op_type = self._all_op_type
+
+        allow_same_tid_op_type = self._allow_same_tid_op_type
 
         net = OrderedDict()
         name_to_input_id = defaultdict(list)
         name_to_id = OrderedDict()
         name_to_type = {}
+        
         id_to_name = {}
         hooks = []
-
+        
         """
         name_to_input_id
         name_to_id
         name_to_type 
         (通过一次forward，注册hook)
         """
-        def _make_hook(name):
+        def register_hook(m):
+            
             def _hook(m, input, output):
+                
                 layer_type = type(m).__name__
-
+                class_name = str(m.__class__).split(".")[-1].split("'")[0]
+                name_keys = "%s_%i" % (class_name, len(name_to_type) + 1)
+              
                 for t in input:
-                    name_to_input_id[name].append(tid(t))
+                    # print('input', tid(t))
+                    name_to_input_id[name_keys].append(tid(t))
 
-                if name not in name_to_id:
-                    name_to_type[name] = layer_type
-                    name_to_id[name] = tid(output)
+                if name_keys not in name_to_id.keys():
+                    # print('output',tid(output))
+                    name_to_type[name_keys] = layer_type
+                    name_to_id[name_keys] = tid(output)
                 else:
                     # share-param structure
                     raise NotImplementedError
 
-            return _hook
+            layer_type = type(m).__name__
+            
+            if (layer_type in all_op_type):
+                hooks.append(m.register_forward_hook(_hook))
 
-        for name, m in model.named_modules():
-            if type(m).__name__ in all_op_type:
-                hook = m.register_forward_hook(_make_hook(name))
-                hooks.append(hook)
 
-        #input_var = torch.rand(1, 3, 256, 256)
-        input_var = torch.rand(*self.input_size)
-        print('input shape:', input_var.shape)
+        device = device.lower()
+        assert device in [
+            "gpu",
+            "cpu",
+        ], "Input device is not valid, please specify 'cuda' or 'cpu'"
+
+        if device == "gpu" and torch.cuda.is_available():
+            dtype = torch.cuda.FloatTensor
+        else:
+            dtype = torch.FloatTensor
+
+        # multiple inputs to the network
+        if isinstance(input_size, tuple):
+            input_size = [input_size]
+
+        # batch_size of 1 for batchnorm
+        x = [torch.rand(*input_size).type(dtype) for in_size in input_size]
+  
+        # print(type(x[0]))
+
+
+        # register hook
+        model.apply(register_hook)
+
+        # make a forward pass
+        # print(x.shape)
+        model(*x)
+
+        # remove these hooks
+        for h in hooks:
+            h.remove()
         
-        _ = model(input_var)
-        print('forward end')
-        for hook in hooks:
-            hook.remove()
+        # for para, names in name_to_param.items():
+        #     print(para,names)
+
+
+        self.layers_num = len(name_to_id)
 
         # since we use OrderDict, so we can just generate new id for repeat tensor and
         # modify the following ids to new one.
@@ -137,25 +185,22 @@ class Quantity(object):
             for i, inp_idx in enumerate(name_to_input_id[name]):
                 if inp_idx == idx:
                     if name_to_type[name] in allow_same_tid_op_type:
+                        print('name %s conflict! %s ' %
+                              (name, str(idx)))
                         rand_int = random.randint(0, 1e9)
                         new_idx = str(int(idx) + rand_int)
                         name_to_id[name] = new_idx
                         modify_id[idx] = new_idx
                     else: 
                         raise ValueError("Same input and output id, the op {} is useful?".format(name))
-        # print('**********************************************')
-        # print('name_to_id',name_to_id)
-        # print('name_to_input_id',name_to_input_id)
-        # print('name_to_type',name_to_type)
-        # print('**********************************************')
-
+        
         if len(name_to_id) != len(set(name_to_id.values())):
             repeat_id = [item for item, count in Counter(name_to_id.values()).items() if count > 1]
             rid_to_name = defaultdict(list)
             for name, id in name_to_id.items():
                 if id in repeat_id:
                     rid_to_name[id].append(name)
-            print(name_to_id, '\n\n', rid_to_name)
+            #print(name_to_id, '\n\n', rid_to_name)
             raise AssertionError("Some layers returned same tensor.")
         #print('**********************************************')
 
@@ -165,6 +210,7 @@ class Quantity(object):
         trigger = None
         for i, (name, idx) in enumerate(name_to_id.items()):
             inputs = []
+
             for inp_idx in name_to_input_id[name]:
                 if inp_idx in id_to_name:
                     inputs.append(id_to_name[inp_idx])
@@ -180,6 +226,15 @@ class Quantity(object):
 
         net = self.prune_net_info(net, keep_node_list)
         return net
+
+    def get_cared_op_names(self, model):
+        layer_names = []
+        for name, module in model.named_modules():
+            if (type(module).__name__ in self._cared_op_type):
+                layer_names.append(name)
+        return layer_names
+
+
 
     def prune_net_info(self, net_info, keep_node_list):
         all_op_names = set(list(net_info.keys()))
@@ -237,7 +292,8 @@ class Quantity(object):
             return img
         
         elif(data_option == 1):
-            return image
+            img, _ = image
+            return img
         elif (data_option == 2):
             np_img = np.load(image)
             img = torch.tensor(np_img)
@@ -253,14 +309,16 @@ class Quantity(object):
     def net_forward(self, net, image_path):
      
         img = self.preprocess(image_path)
+        if (self.device == 'gpu'):
+            img = img.cuda()
         start = time.clock()
         _ = net(img)
         end = time.clock()
         print("forward time : %.3f s" % (end - start))
 
     def get_merge_groups(self, net):
-        merge_ops = ['Eltwise', 'Concat']
-        cared_op_type = ['Conv2d', 'Linear']
+        merge_ops = self._merge_op_type
+        cared_op_type = self._cared_op_type
 
         merge_layer = []
         for name, info in net.items():
@@ -269,7 +327,7 @@ class Quantity(object):
 
         merge_layer.reverse()
         print(colored('merge layers:', 'green'), merge_layer)
-
+        
         vis = []
 
         def _dfs(name):
@@ -321,10 +379,12 @@ class Quantity(object):
                                         debug=False)
         quantizer = Quantizer(top_feat_names, worker_num=worker_num, debug=False)
 
-        named_feats, _ = self.hook_model(self.model)
+        named_feats ,_ = self.regist_hook_outfeature(self.model)
         # run float32 inference on calibration dataset to find the activations range
         for i, image in enumerate(images_files):
-            print('input size:',image.shape)
+            #print('input size:',image.shape)
+            if (i > self._max_img_num):
+                break
             self.net_forward(self.model, image)
             print("loop stage 1 : %d" % (i))
             # find max threshold
@@ -332,12 +392,19 @@ class Quantity(object):
             for name, feat in named_feats.items():
                 tensors[name] = feat.flatten()
             collector.refresh_max_val(tensors)
+            
 
         print(colored('max_vals', 'green'), collector.max_vals)
         distribution_intervals = collector.distribution_intervals
         for b_names in bottom_feat_names:
             assert len(b_names) > 1
             tmp_distribution_interval = 0
+            b_is_eltwise = False
+            for pre_feat_name in b_names:
+                if (self.net_info[pre_feat_name]['type'] == 'Eltwise'):
+                    b_is_eltwise = True
+            if (b_is_eltwise):
+                continue
             # distributions
             for pre_feat_name in b_names:
                 tmp_distribution_interval = max(tmp_distribution_interval,
@@ -348,6 +415,8 @@ class Quantity(object):
         # for each layer, collect histograms of activations
         print(colored("Collect histograms of activations:", 'cyan'))
         for i, image in enumerate(images_files):
+            if (i > self._max_img_num):
+                break
             self.net_forward(self.model, image)
             print("loop stage 2 : %d" % (i))
             start = time.clock()
@@ -357,6 +426,7 @@ class Quantity(object):
             collector.add_to_distributions(tensors)
             end = time.clock()
             print("add cost %.3f s" % (end - start))
+            
 
         distributions = collector.distributions
 
@@ -364,24 +434,48 @@ class Quantity(object):
         for b_names in bottom_feat_names:
             assert len(b_names) > 1
             tmp_distributions = np.zeros(interval_num)
+            b_is_eltwise = False
+            for pre_feat_name in b_names:
+                if (self.net_info[pre_feat_name]['type'] == 'Eltwise'):
+                    b_is_eltwise = True
+            if (b_is_eltwise):
+                continue
             # distributions
             for pre_feat_name in b_names:
                 tmp_distributions += distributions[pre_feat_name]
             for pre_feat_name in b_names:
                 distributions[pre_feat_name] = tmp_distributions
 
+
         quantizer.quantize(distributions, distribution_intervals)
         bits = quantizer.bits
 
+        # eltwise1 = eltwise0 + conv0 : bit(conv0)=bit(eltwise0)
+        for b_names in bottom_feat_names:
+            assert len(b_names) > 1
+            elt_idx = 0
+            b_is_eltwise = False
+            for i,pre_feat_name in enumerate(b_names):
+                if (self.net_info[pre_feat_name]['type'] == 'Eltwise'):
+                    elt_idx = i
+                    b_is_eltwise = True
+            if (b_is_eltwise):      
+                conv_id = 1 - elt_idx
+                print(colored('bit conv:eltwise ', 'green'), bits[b_names[conv_id]],bits[b_names[elt_idx]])
+
+                bits[b_names[conv_id]] = bits[b_names[elt_idx]]
+
+
         is_first_op = True
-        for feat_name in top_feat_names:
-            feat_str = feat_name.replace('.', '_') + " " + str(bits[feat_name])
-            if feat_name not in self.net_info:
-                assert feat_name == 'image', feat_name
+        for i, feat_name in enumerate(top_feat_names):
+            if (feat_name == 'image'):
+                feat_str = 'image' + ' ' + str(bits['image'])
             elif is_first_op:
+                feat_str = self.cared_op_layer_names[i - 1] + ' ' + str(bits[feat_name])
                 feat_str = feat_str + ' ' + str(bits['image'])
                 is_first_op = False
             elif len(self.net_info[feat_name]['inputs']) > 0:
+                feat_str = self.cared_op_layer_names[i-1] + ' ' + str(bits[feat_name])
                 for inp_name in self.net_info[feat_name]['inputs']:
                     feat_str = feat_str + ' ' + str(bits[inp_name])
             else:
@@ -393,30 +487,39 @@ class Quantity(object):
             for tabel_line in table_file_content:
                 f.write(tabel_line + "\n")
 
-    def hook_model(self, model):
+    def regist_hook_outfeature(self, model):
         
         """
         创建hook获取每层的结果
         """
-
         out_feat = OrderedDict()
         hooks = []
+        #print('layer num:', self.layers_num)
 
-        def _make_hook(name, is_input):
-            def hook(m, input, output):
-                out_feat[name] = output.detach().cpu().numpy()
-                if is_input:
+        all_op_type = self._all_op_type
+        def _make_hook(m):
+            
+            def _hook(m, input, output):
+                class_name = str(m.__class__).split(".")[-1].split("'")[0]
+                
+                layer_type = type(m).__name__
+                idx = len(out_feat) % (int(self.layers_num + 1))
+                if (idx == 0):
+                    out_feat.clear()                  
                     out_feat['image'] = input[0].detach().cpu().numpy()
+                    idx = len(out_feat)
+                name_keys = "%s_%i" % (class_name, idx)
+                out_feat[name_keys] = output.detach().cpu().numpy()
 
-            return hook
 
-        is_input = True
-        for i, (name, m) in enumerate(model.named_modules()):
-            if type(m).__name__ in ['Conv2d', 'Linear', 'ReLU', 'Eltwise', 'Concat']:
-                hook = m.register_forward_hook(_make_hook(name, is_input))
-                hooks.append(hook)
-                is_input = False
+            if (type(m).__name__ in all_op_type):
+                hooks.append(m.register_forward_hook(_hook))
 
+        model.apply(_make_hook)
+
+
+        # register hook
+      
         return out_feat, hooks
 
 
@@ -429,6 +532,8 @@ class Quantity(object):
         work_dir = self.config['OUTPUT']['WORK_DIR']
         weight_dir = self.config['OUTPUT']['WEIGHT_DIR']
         bias_dir = self.config['OUTPUT']['BIAS_DIR']
+        final_weight_dir = self.config['OUTPUT']['FINAL_WEIGHT_DIR']
+        final_bias_dir = self.config['OUTPUT']['FINAL_BIAS_DIR']
 
         if not os.path.exists(work_dir):
             os.makedirs(work_dir)
@@ -436,6 +541,10 @@ class Quantity(object):
             os.makedirs(weight_dir)
         if not os.path.exists(bias_dir):
             os.makedirs(bias_dir)
+        if not os.path.exists(final_weight_dir):
+            os.makedirs(final_weight_dir)
+        if not os.path.exists(final_bias_dir):
+            os.makedirs(final_bias_dir)
 
     def rewrite_weight(self):
 
@@ -507,7 +616,7 @@ class Quantity(object):
             for n in name_list:
                 module = getattr(module, n)
 
-            param_np = param.detach().numpy()
+            param_np = param.detach().cpu().numpy()
 
             if name.endswith('weight') and isinstance(module, nn.Conv2d):
                 dilation = module.dilation
@@ -531,8 +640,8 @@ class Quantity(object):
         for name, bit in quantizer.bits.items():
             param_quantity = np.around(params[name] * math.pow(2, bit))
             param_quantity = np.clip(param_quantity, -128, 127)
-            param_file_name = name.replace('.', '_')
-
+            #param_file_name = name.replace('.', '_')
+            param_file_name = name
             tabel_line = param_file_name + " " + str(bit)
             tabel_file.append(tabel_line)
 
