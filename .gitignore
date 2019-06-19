@@ -37,7 +37,7 @@ dist/
 # vscode
 .vscode
 
-quantity/data
 *.txt
 *.bak
 workdir
+data
