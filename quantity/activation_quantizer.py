@@ -79,7 +79,7 @@ class Quantity(object):
         self.net_info = self.build_net_structure(self.model, self.input_size, self.device)
         
         self.cared_op_layer_names = self.get_cared_op_names(self.model)
-        self._DKL_weight = True
+        self._DKL_weight = False 
 
     
     def build_net_structure(self, model, input_size, device='cpu'):
