@@ -78,7 +78,8 @@ class Quantity(object):
         self.name_to_param = OrderedDict()
         self.net_info = self.build_net_structure(self.model, self.input_size, self.device)
         
-        self.cared_op_layer_names= self.get_cared_op_names(self.model)
+        self.cared_op_layer_names = self.get_cared_op_names(self.model)
+        self._DKL_weight = True
 
     
     def build_net_structure(self, model, input_size, device='cpu'):
@@ -154,9 +155,6 @@ class Quantity(object):
         # batch_size of 1 for batchnorm
         x = [torch.rand(*input_size).type(dtype) for in_size in input_size]
   
-        # print(type(x[0]))
-
-
         # register hook
         model.apply(register_hook)
 
@@ -367,7 +365,8 @@ class Quantity(object):
         table_file_content = []
         bottom_feat_names = self.get_merge_groups(self.net_info)
         top_feat_names = ['image'] + list(self.net_info.keys())
-
+        for top_name in top_feat_names:
+            print(top_name)
         max_vals = {}
         distribution_intervals = {}
         for i, feat_name in enumerate(top_feat_names):
@@ -379,7 +378,9 @@ class Quantity(object):
                                         debug=False)
         quantizer = Quantizer(top_feat_names, worker_num=worker_num, debug=False)
 
-        named_feats ,_ = self.regist_hook_outfeature(self.model)
+        named_feats, _ = self.regist_hook_outfeature(self.model)
+       
+        
         # run float32 inference on calibration dataset to find the activations range
         for i, image in enumerate(images_files):
             #print('input size:',image.shape)
@@ -390,6 +391,7 @@ class Quantity(object):
             # find max threshold
             tensors = {}
             for name, feat in named_feats.items():
+                print(name)
                 tensors[name] = feat.flatten()
             collector.refresh_max_val(tensors)
             
@@ -510,7 +512,6 @@ class Quantity(object):
                     idx = len(out_feat)
                 name_keys = "%s_%i" % (class_name, idx)
                 out_feat[name_keys] = output.detach().cpu().numpy()
-
 
             if (type(m).__name__ in all_op_type):
                 hooks.append(m.register_forward_hook(_hook))
@@ -634,10 +635,20 @@ class Quantity(object):
         collector.refresh_max_val(params)
         print(colored('max vals:', 'green'), collector.max_vals)
 
-        collector.add_to_distributions(params)
-        quantizer.quantize(collector.distributions, collector.distribution_intervals)
+        bits_co = {}
+        # for weight quantity 1.dkl algorthm threashold for bit 2.max value for bit
+        if(self._DKL_weight):
+            collector.add_to_distributions(params)
+            quantizer.quantize(collector.distributions, collector.distribution_intervals)
+            bits_co = quantizer.bits
+            print(colored('threshold:', 'green'), quantizer.threshold_value)
+        else:
+            for name in param_names:
+                bit_int_d = math.ceil(math.log(collector.max_vals[name], 2))
+                bit_bra_d_8 = int(8 - 1 - bit_int_d)
+                bits_co[name] = bit_bra_d_8
 
-        for name, bit in quantizer.bits.items():
+        for name, bit in bits_co.items():
             param_quantity = np.around(params[name] * math.pow(2, bit))
             param_quantity = np.clip(param_quantity, -128, 127)
             #param_file_name = name.replace('.', '_')

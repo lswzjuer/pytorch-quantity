@@ -28,11 +28,17 @@ class Quantizer:
 
         self._bits = {}
         self._quantized_flag = False
+        self._threshold_value = {}
 
     @property
     def bits(self):
         assert self._quantized_flag, "Please use quantize() first."
         return self._bits
+
+    @property
+    def threshold_value(self):
+        assert self._quantized_flag, "Please use quantize() first."
+        return self._threshold_value
 
     def quantize(self, distributions, distribution_intervals):
         if self._debug and self._quantized_flag:
@@ -53,9 +59,8 @@ class Quantizer:
                 sub_distributions[tensor_name] = distributions[tensor_name]
                 sub_distribution_intervals[tensor_name] = distribution_intervals[tensor_name]
             result = pool.apply_async(
-                run,
-                args=(Quantizer,
-                      sub_tensor_list,
+                self.quantize_worker,
+                args=(sub_tensor_list,
                       sub_distributions,
                       sub_distribution_intervals,
                       self._debug))
@@ -63,33 +68,34 @@ class Quantizer:
         pool.close()
         pool.join()
         for result in results:
-            tensor_list, sub_bits = result.get()
-            for (tensor_name, bit) in zip(tensor_list, sub_bits):
+            tensor_list, sub_bits, sub_thresholds = result.get()
+            for (tensor_name, bit, threshold) in zip(tensor_list, sub_bits, sub_thresholds):
                 self._bits[tensor_name] = bit
+                self._threshold_value[tensor_name] = threshold
         pool.terminate()
 
-    @staticmethod
-    def quantize_worker(tensor_list, distributions, intervals, debug=False):
+    def quantize_worker(self, tensor_list, distributions, intervals, debug=False):
         if debug:
             return tensor_list, [1 for _ in range(len(tensor_list))]
         bits = []
+        threshold_bias_list = []
         for tensor_name in tensor_list:
-            distribution = Quantizer.normalize_distribution(distributions[tensor_name])
-            threshold_bin = Quantizer.threshold_distribution(distribution)
-            threshold_bias = (threshold_bin + 0.5) * intervals[tensor_name]
+            distribution = self.normalize_distribution(distributions[tensor_name])
+            threshold_bin = self.threshold_distribution(distribution)
 
+            threshold_bias = (threshold_bin + 0.5) * intervals[tensor_name]
+            threshold_bias_list.append(threshold_bias)
+           
             bit_int_d = math.ceil(math.log(threshold_bias, 2))
             bit_bra_d_8 = int(8 - 1 - bit_int_d)
             bits.append(bit_bra_d_8)
             print(colored('{} '.format(tensor_name), 'green'), 'bit:', bit_bra_d_8)
-        return tensor_list, bits
+        return tensor_list, bits, threshold_bias_list
 
-    @staticmethod
-    def normalize_distribution(distribution):
+    def normalize_distribution(self, distribution):
         return distribution.astype(np.float32) / (distribution.sum() + 1e-12)
 
-    @staticmethod
-    def threshold_distribution(distribution, target_bin=128):
+    def threshold_distribution(self, distribution, target_bin=128):
         min_kl_divergence = 66666
         threshold_sum = distribution[target_bin:].sum()
         target_threshold = distribution.size - 1
@@ -151,15 +157,14 @@ class Quantizer:
                     if distribution[j] != 0:
                         expand_distribution[j] += expand_value
 
-            kl_divergence = Quantizer.compute_kl_divergence(t_distribution, expand_distribution)
+            kl_divergence = self.compute_kl_divergence(t_distribution, expand_distribution)
             if kl_divergence < min_kl_divergence:
                 min_kl_divergence = kl_divergence
                 target_threshold = threshold
 
         return target_threshold
 
-    @staticmethod
-    def compute_kl_divergence(dist_a, dist_b):
+    def compute_kl_divergence(self, dist_a, dist_b):
         dist_a = np.array(dist_a)
         dist_b = np.array(dist_b)
         nonzero_inds = dist_a != 0
@@ -167,6 +172,3 @@ class Quantizer:
                       np.log(dist_a[nonzero_inds] / (dist_b[nonzero_inds] + 1e-12) + 1e-12))
 
 
-def run(cls_instance, *args):
-    """Compatible with Python2."""
-    return cls_instance.quantize_worker(*args)
