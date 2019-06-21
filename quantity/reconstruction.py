@@ -2,7 +2,7 @@
 # @Author: liusongwei
 # @Date:   2019-06-17 10:43:49
 # @Last Modified by:   liusongwei
-# @Last Modified time: 2019-06-21 18:25:38
+# @Last Modified time: 2019-06-21 19:05:42
 # -*- coding:utf-8 -*i
 import os
 import yaml
@@ -323,7 +323,7 @@ class Reconstruction(object):
         print(colored("Model reconstruction successfully !", 'green'))
         torch.save(self.model, new_model_path)
         return self.model
-        
+                  
     def merge_bn(self):
         '''
         input: the origin model
