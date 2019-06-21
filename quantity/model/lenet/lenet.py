@@ -1,12 +1,12 @@
-
 import torch
 from torch import nn, optim
 import torch.nn.functional as F
 from torch.autograd import Variable
 import os,sys
-sys.path.insert(0, '/home/zhangjiwei/workspace/pytorchremodel/quantity/common/quantity')
-from quantity_layers import View
 
+sys.path.insert(0, '../../')
+
+from common.quantity import View
 
 # 定义 Convolution Network 模型
 class Cnn(nn.Module):

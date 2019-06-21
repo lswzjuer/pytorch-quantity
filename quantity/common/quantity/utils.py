@@ -34,9 +34,9 @@ def merge_bn(model):
                 bias_data=bias.data
 
             # merge bn to conv layer
-            tmp = alpha / torch.sqrt(var + 1e-5).cuda()
+            tmp = alpha / torch.sqrt(var + 1e-5)
             new_weight = tmp.view(tmp.size()[0], 1, 1, 1)*weight_data
-            new_bias=tmp*(bias_data.cuda() -mean ) + beta
+            new_bias=tmp*(bias_data -mean ) + beta
 
             # Modify convolution layer parameters
             conv_layer.weight = nn.Parameter(new_weight)
