@@ -72,3 +72,23 @@ def walk_dirs(dir_name, file_type=None):
             files_path.append(file_path)
 
     return files_path
+
+
+def tid(tensor):
+    """
+    Return unique id for the tensor based on the tensor value.
+
+    Args:
+        tensor: torch tensor of any shape.
+
+    Returns:
+        str
+    """
+    ids = []
+    x = tensor.cpu()
+    ids.append(
+        str(int((x[..., 0].max() + x[..., 0].min()).item() * 1e4 % 1e4)))
+    ids.append(str(int((x.max() + x.min()).item() * 1e4 % 1e4)))
+    ids.append(str(int(x[..., 0].mean().item() * 1e4 % 1e4)))
+    ids.append(str(int(x.mean().item() * 1e4 % 1e4)))
+    return ''.join(ids)

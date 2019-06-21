@@ -39,5 +39,5 @@ dist/
 
 *.txt
 *.bak
-workdir
-data
+workdir/*
+
