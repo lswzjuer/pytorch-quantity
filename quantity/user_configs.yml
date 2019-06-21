@@ -1,8 +1,16 @@
 PATH:
-    DATA_PATH: ./data/
-    MODEL_NET_PATH: ./model/resnet/ResNet_18_fabu.py
-    MODEL_PATH: ./model/resnet/resnet18.pth
-    QUANTITY_MODEL_PATH: ./model/quantity_lenet.pth
+    # # lenet user configs
+    # DATA_PATH: ./datasets/
+    # MODEL_NET_PATH: ./model/lenet/lenet.py
+    # MODEL_PATH: ./workdir/lenet/cnn.pth
+    # QUANTITY_MODEL_PATH: ./workdir/lenet/quantity_lenet.pth
+
+    # resnet user configs
+    DATA_PATH: ./datasets/
+    MODEL_NET_PATH: ./model/resnet/resnet_18_fabu.py
+    MODEL_PATH: ./workdir/resnet/resnet18.pth
+    QUANTITY_MODEL_PATH: ./workdir/resnet/quantity_resnet.pth
+
 MODEL:
     INPUT_SHAPE: 1,3,32,32
 PRE_PROCESS:
@@ -11,7 +19,6 @@ PRE_PROCESS:
       MEAN: 128
       RESIZE: 32,32
       SCALE: 0.0075
-    
 
 SETTINGS:
     DEVICE: gpu 

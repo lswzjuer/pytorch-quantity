@@ -1,13 +1,12 @@
 '''ResNet-18 Image classfication for cifar-10 with PyTorch 
 
 '''
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import os, sys
 
-sys.path.insert(0, '/home/zhangjiwei/pytorchremodel/quantity/common/quantity/')
-import fabu_layer
+import torch.nn as nn
+import sys
+
+sys.path.insert(0, '../../')
+from common.quantity import Eltwise,View
 
 class ResidualBlock(nn.Module):
     def __init__(self, inchannel, outchannel, stride=1):
@@ -20,7 +19,7 @@ class ResidualBlock(nn.Module):
             nn.BatchNorm2d(outchannel)
         )
         self.shortcut = nn.Sequential()
-        self.Eltwise = fabu_layer.Eltwise()
+        self.Eltwise = Eltwise()
         self.relu = nn.ReLU(False)
         if stride != 1 or inchannel != outchannel:
             self.shortcut = nn.Sequential(
@@ -49,7 +48,7 @@ class ResNet(nn.Module):
         self.layer4 = self.make_layer(ResidualBlock, 512, 2, stride=2)
         self.avePool2d = nn.AvgPool2d(4)
         self.fc = nn.Linear(512, num_classes)
-        self.view = fabu_layer.View()
+        self.view = View()
 
     def make_layer(self, block, channels, num_blocks, stride):
         strides = [stride] + [1] * (num_blocks - 1)   #strides=[1,1]
@@ -70,7 +69,5 @@ class ResNet(nn.Module):
         out = self.fc(out)
         return out
 
-
 def ResNet18():
-
     return ResNet(ResidualBlock)

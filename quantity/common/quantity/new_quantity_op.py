@@ -1,14 +1,9 @@
-# -*- coding: utf-8 -*-
-# @Author: liusongwei
-# @Date:   2019-06-17 10:36:02
-# @Last Modified by:   liusongwei
-# @Last Modified time: 2019-06-17 11:57:51
-
 import torch
 import torch.nn as nn
-import json
 import os
 import numpy as np
+import matplotlib.pyplot as plt
+
 
 QUANTIZE_BIT=8
 
@@ -49,16 +44,28 @@ class RightShift(nn.Module):
         return output_flatten.reshape(sh)
 
 
-# dequantized
-class Fp(nn.Module):
-    def __init__(self,ob):
-        super(Fp, self).__init__()
-        self.ob=ob
-
+# Quantization input vector
+class Quantity(nn.Module):
+    def __init__(self,ib):
+        super(Quantity, self).__init__()
+        self.ib=ib
     def forward(self,x):
-        output=torch.div(x,pow(2,self.ob))
+        if QUANTIZE_BIT==8:
+            output=torch.round(torch.mul(x, pow(2, self.ib))).clamp(-128.0, 127.0)
+        else:
+            output=torch.round(torch.mul(x, pow(2, self.ib))).clamp(-32768.0, 32767.0)
+        #output=torch.mul(x, pow(2, self.ib))
         return output
 
+# Inverse quantization output vector
+class DeQuantity(nn.Module):
+    """docstring for DeQuantity"""
+    def __init__(self, ob):
+        super(DeQuantity, self).__init__()
+        self.ob = ob
+    def forward(self,x):     
+        output=torch.div(x,pow(2,self.ob))
+        return output       
 
 # Saturated truncation
 class Sp(nn.Module):
@@ -84,6 +91,7 @@ class Sp(nn.Module):
         return output_flatten.reshape(sh)
 
 
+# Convolution result plus bias
 class BiasAdd(nn.Module):
     def __init__(self):
         super(BiasAdd, self).__init__()
@@ -92,7 +100,7 @@ class BiasAdd(nn.Module):
         output = torch.add(x, y)
         return output
 
-
+# Convolution node of a quantization operation
 class NewConv2d(nn.Module):
     def __init__(self,conv_module,quantize_infor):
         super(NewConv2d, self).__init__()
@@ -103,23 +111,26 @@ class NewConv2d(nn.Module):
         self.rs_bit=self.weight_bit+self.input_bit-self.output_bit
 
         # model structure
+        self.Quan=Quantity(self.input_bit)
         self.Conv=conv_module
         self.RightShift=RightShift(QUANTIZE_BIT,self.rs_bit)
         self.BiasAdd=BiasAdd()
         self.Sp=Sp(QUANTIZE_BIT)
+        self.DeQuan=DeQuantity(self.output_bit)
 
         # quantize weights and biases
         self.quantity()
 
     def forward(self, input):
-        conv_output=self.Conv(input)
-        conv_output_rf=self.RightShift(conv_output)
-        self.quantized_bias_expand=self.quantized_bias.unsqueeze(1).unsqueeze(1).unsqueeze(0).expand_as(conv_output_rf)
+        conv_output=self.Quan(input)
+        conv_output=self.Conv(conv_output)
+        conv_output=self.RightShift(conv_output)
+        self.quantized_bias_expand=self.quantized_bias.unsqueeze(1).unsqueeze(1).unsqueeze(0).expand_as(conv_output)
 
-        biasadd_output=self.BiasAdd(conv_output_rf,self.quantized_bias_expand)
-        biasadd_output_sp=self.Sp(biasadd_output)
-        return biasadd_output_sp
-
+        conv_output=self.BiasAdd(conv_output,self.quantized_bias_expand)
+        conv_output=self.Sp(conv_output)
+        conv_output=self.DeQuan(conv_output)
+        return conv_output
 
     def quantity(self):
         self.weight=self.Conv.weight
@@ -151,19 +162,18 @@ class NewConv2d(nn.Module):
         # original bias parameter, we use it in BiasAdd layer
         self.quantized_bias=quantized_bias_clmap
 
-
-
+# The sum operation of quantized operations
 class NewAdd(nn.Module):
     def __init__(self):
         super(NewAdd, self).__init__()
         self.Sp=Sp(QUANTIZE_BIT)
 
     def forward(self, x,y ):
-        add_result=torch.add(x,y)
-        out_put=self.Sp(add_result)
+        out_put=torch.add(x,y)
+        out_put=self.Sp(out_put)
         return out_put
 
-
+# Full connectivity layer for quantization operations
 class NewLinear(nn.Module):
     def __init__(self,linear_module,quantize_infor):
         super(NewLinear, self).__init__()
@@ -174,21 +184,25 @@ class NewLinear(nn.Module):
         self.rs_bit=self.weight_bit+self.input_bit-self.output_bit
 
         # model structure
+        self.Quan=Quantity(self.input_bit)
         self.Linear=linear_module
         self.RightShift=RightShift(QUANTIZE_BIT,self.rs_bit)
         self.BiasAdd=BiasAdd()
         self.Sp=Sp(QUANTIZE_BIT)
+        self.DeQuan=DeQuantity(self.output_bit)
 
         # quantize weights and biases
         self.quantity()
 
     def forward(self, input):
-        linear_output=self.Linear(input)
-        linear_output_rf=self.RightShift(linear_output)
-        self.quantized_bias_expand=self.quantized_bias.unsqueeze(0).expand_as(linear_output_rf)
-        biasadd_output=self.BiasAdd(linear_output_rf,self.quantized_bias_expand)
-        biasadd_output_sp=self.Sp(biasadd_output)
-        return biasadd_output_sp
+        linear_output=self.Quan(input)
+        linear_output=self.Linear(linear_output)
+        linear_output=self.RightShift(linear_output)
+        self.quantized_bias_expand=self.quantized_bias.unsqueeze(0).expand_as(linear_output)
+        linear_output=self.BiasAdd(linear_output,self.quantized_bias_expand)
+        linear_output=self.Sp(linear_output)
+        linear_output=self.DeQuan(linear_output)
+        return linear_output
 
 
     def quantity(self):
@@ -221,6 +235,7 @@ class NewLinear(nn.Module):
         # original bias parameter, we use it in BiasAdd layer
         self.quantized_bias=quantized_bias_clmap
 
+
 class QuanDequan(nn.Module):
     """docstring for QuanDequan"""
     def __init__(self,Bitwidth,bit):
@@ -230,20 +245,28 @@ class QuanDequan(nn.Module):
 
     def forward(self,quantized_x):
         # quantized result
-        quantized_x=torch.round(torch.mul(quantized_x,pow(2,self.bit)))
+        quantized_x=torch.round(  torch.mul(  quantized_x, pow(2,self.bit)  )   )
         if self.bitwidth==8:
             quantized_x=quantized_x.clamp(-128,127)
+            #quantized_x = quantized_x
         else:
             quantized_x=quantized_x.clamp(-32768.0,32767.0)
+            #quantized_x = quantized_x
         #dequantized
-        quantized_x=torch.div(quantized_x,pow(2,self.bit))
+        quantized_x=torch.div( quantized_x, pow(2,self.bit) )
         return quantized_x
 
 class TestConv(nn.Module):
     """docstring for TestConv"""
-    def __init__(self, name, module, quantize_infor):
+    def __init__(self, name, module, quantize_infor,new_model_path):
         super(TestConv, self).__init__()
         self.name = name
+
+        # create the quantity and dequantity results folder
+        self.path=os.path.join(os.path.dirname(new_model_path),"quantity_results")
+        if not os.path.exists(self.path):
+            os.makedirs(self.path)
+
         self.weight_bit=quantize_infor['weight_bit']
         self.bias_bit=quantize_infor['bias_bit']
         self.input_bit=quantize_infor['input_bit']
@@ -252,21 +275,20 @@ class TestConv(nn.Module):
         self.bias_qdp=QuanDequan(QUANTIZE_BIT,self.bias_bit)
         self.output_qdp=QuanDequan(QUANTIZE_BIT,self.output_bit)
         self.Conv=module
-
         self.feature_extract()
 
     def forward(self,x):
         output=self.Conv(x)
         output_qdp=self.output_qdp(output)
 
-        output_numpy="  ".join(str(x) for x in output.cpu().detach().numpy().flatten().tolist())
-        output_qdp_numpy="  ".join(str(x) for x in output_qdp.cpu().detach().numpy().flatten().tolist())
+        # #Save the output of quantization and inverse quantization
+        # output_numpy="  ".join([str(x) for x in output.cpu().detach().numpy().flatten()])
+        # output_qdp_numpy="  ".join([str(x) for x in output_qdp.cpu().detach().numpy().flatten()])
+        # with open(os.path.join(self.path,self.name.replace('.','_')+"_output.txt"),'a') as file:
+        #     file.write(output_numpy+'\n')
+        #     file.write(output_qdp_numpy+'\n')
 
-        with open(os.path.join("./quantity_result",self.name.replace('.','_')+"_output.txt"),'a') as file:
-            file.write(output_numpy+'\n')
-            file.write(output_qdp_numpy+'\n')
-
-        return output
+        return output_qdp
 
 
     def feature_extract(self):
@@ -280,34 +302,69 @@ class TestConv(nn.Module):
         else:
             bias_data=self.bias.data
 
-
-        # save origin weight and bias
-        weight_data_numpy="  ".join([str(x) for x in weight_data.cpu().numpy().tolist()])
-        bias_data_numpy="  ".join([str(x) for x in bias_data.cpu().numpy().tolist()])
-
         weight_data_qdp=self.weight_qdp(weight_data)
         bias_data_qdp=self.bias_qdp(bias_data)
-
-        # quantize-dequantize weight and bias numpy
-        weight_data_qdp_numpy="  ".join([str(x) for x in weight_data_qdp.cpu().numpy().tolist()])
-        bias_data_qdp_numpy="  ".join([str(x) for x in bias_data_qdp.cpu().numpy().tolist()])
-
-        with open(os.path.join("./quantity_result", self.name.replace('.','_') + "_weight.txt"), 'a') as file:
-            file.write(weight_data_numpy+'\n')
-            file.write(weight_data_qdp_numpy+'\n')
-        with open(os.path.join("./quantity_result",self.name.replace('.','_')+"_bias.txt"),'a') as file:
-            file.write(bias_data_numpy+'\n')
-            file.write(bias_data_qdp_numpy+'\n')
-
 
         self.Conv.weight=nn.Parameter(weight_data_qdp)
         self.Conv.bias=nn.Parameter(bias_data_qdp)
 
 
+        # visualization code
+        # save origin weight and bias
+        weight_data_numpy="  ".join([str(x) for x in weight_data.cpu().numpy().flatten()])
+        bias_data_numpy="  ".join([str(x) for x in bias_data.cpu().numpy().flatten()])
+
+        # quantize-dequantize weight and bias numpy
+        weight_data_qdp_numpy="  ".join([str(x) for x in weight_data_qdp.cpu().numpy().flatten()])
+        bias_data_qdp_numpy="  ".join([str(x) for x in bias_data_qdp.cpu().numpy().flatten()])
+
+        with open(os.path.join(self.path, self.name.replace('.','_') + "_weight.txt"), 'a') as file:
+            file.write(weight_data_numpy+'\n\n\n\n')
+            file.write(weight_data_qdp_numpy+'\n\n\n\n')
+        with open(os.path.join(self.path,self.name.replace('.','_')+"_bias.txt"),'a') as file:
+            file.write(bias_data_numpy+'\n\n\n\n')
+            file.write(bias_data_qdp_numpy+'\n\n\n\n')
+
+        # 画出量化和原始权重的直方图
+        weight_path=os.path.join(self.path, self.name.replace('.','_') + "_weight_o.png")
+        bias_path=os.path.join(self.path, self.name.replace('.','_') + "_bias_o.png")
+        self.plot_hist(weight_data.cpu().numpy(),2048,weight_path,title='weight')
+        self.plot_hist(bias_data.cpu().numpy(),2048,bias_path,title='bias')
+
+        weight_path_q=os.path.join(self.path, self.name.replace('.','_') + "_weight_q.png")
+        bias_path_q=os.path.join(self.path, self.name.replace('.','_') + "_bias_q.png")
+        self.plot_hist(weight_data_qdp.cpu().numpy(),2048,weight_path_q,title='weight')
+        self.plot_hist(bias_data_qdp.cpu().numpy(),2048,bias_path_q,title='bias')
+
+
+    # Drawing histogram
+    def plot_hist(self,ndarray, bins, save_path, title):
+
+        data=ndarray.flatten()
+        # set the plt
+        fig=plt.figure()
+        plt.grid()
+        plt.title(title)
+        plt.xlabel('bins')
+        plt.ylabel('counter/frequency')
+        plt.hist(data, bins,density=True, histtype='bar', facecolor='blue')
+        if save_path is not None:
+            fig.savefig(save_path, bbox_inches='tight')
+        else:
+            raise NotImplementedError("the path is not exists")
+        plt.close(fig)
+
+
 class TestLinear(nn.Module):
-    def __init__(self, name, module, quantize_infor):
+    def __init__(self, name, module, quantize_infor,new_model_path):
         super(TestLinear, self).__init__()
         self.name = name
+
+        # create the quantity and dequantity results folder
+        self.path=os.path.join(os.path.dirname(new_model_path),"quantity_results")
+        if not os.path.exists(self.path):
+            os.makedirs(self.path)
+
         self.weight_bit=quantize_infor['weight_bit']
         self.bias_bit=quantize_infor['bias_bit']
         self.input_bit=quantize_infor['input_bit']
@@ -322,13 +379,14 @@ class TestLinear(nn.Module):
         output=self.linear(x)
         output_qdp=self.output_qdp(output)
 
-        output_numpy = "  ".join(str(x) for x in output.cpu().detach().numpy().flatten().tolist())
-        output_qdp_numpy = "  ".join(str(x) for x in output_qdp.cpu().detach().numpy().flatten().tolist())
+        # Save the output of quantization and inverse quantization
+        # output_numpy="  ".join([str(x) for x in output.cpu().detach().numpy().flatten()])
+        # output_qdp_numpy="  ".join([str(x) for x in output_qdp.cpu().detach().numpy().flatten()])
+        # with open(os.path.join(self.path,self.name.replace('.','_')+"_output.txt"),'a') as file:
+        #     file.write(output_numpy+'\n')
+        #     file.write(output_qdp_numpy+'\n')
 
-        with open(os.path.join("./quantity_result",self.name.replace('.','_')+"_output.txt"),'a') as file:
-            file.write(output_numpy+'\n')
-            file.write(output_qdp_numpy+'\n')
-        return output
+        return output_qdp
 
 
     def feature_extract(self):
@@ -342,28 +400,58 @@ class TestLinear(nn.Module):
         else:
             bias_data=self.bias.data
 
-        # save origin weight and bias
-        weight_data_numpy="  ".join([str(x) for x in weight_data.cpu().numpy().tolist()])
-        bias_data_numpy="  ".join([str(x) for x in bias_data.cpu().numpy().tolist()])
-
         weight_data_qdp=self.weight_qdp(weight_data)
         bias_data_qdp=self.bias_qdp(bias_data)
 
-        # quantize-dequantize weight and bias numpy
-        weight_data_qdp_numpy="  ".join([str(x) for x in weight_data_qdp.cpu().numpy().tolist()])
-        bias_data_qdp_numpy="  ".join([str(x) for x in bias_data_qdp.cpu().numpy().tolist()])
-
-        #weight_path=os.path.join("../quantity_result", self.name.replace('.','_') + "_weight.json")
-        with open(os.path.join("./quantity_result", self.name.replace('.','_') + "_weight.txt"), 'a') as file:
-            file.write(weight_data_numpy+'\n')
-            file.write(weight_data_qdp_numpy+'\n')
-        with open(os.path.join("./quantity_result",self.name.replace('.','_')+"_bias.txt"),'a') as file:
-            file.write(bias_data_numpy+'\n')
-            file.write(bias_data_qdp_numpy+'\n')
-
         self.linear.weight=nn.Parameter(weight_data_qdp)
         self.linear.bias=nn.Parameter(bias_data_qdp)
-        
+
+
+        # visualization code
+        # save origin weight and bias
+        weight_data_numpy="  ".join([str(x) for x in weight_data.cpu().numpy().flatten()])
+        bias_data_numpy="  ".join([str(x) for x in bias_data.cpu().numpy().flatten()])
+
+        # quantize-dequantize weight and bias numpy
+        weight_data_qdp_numpy="  ".join([str(x) for x in weight_data_qdp.cpu().numpy().flatten()])
+        bias_data_qdp_numpy="  ".join([str(x) for x in bias_data_qdp.cpu().numpy().flatten()])
+
+        with open(os.path.join(self.path, self.name.replace('.','_') + "_weight.txt"), 'a') as file:
+            file.write(weight_data_numpy+'\n\n\n\n')
+            file.write(weight_data_qdp_numpy+'\n\n\n\n')
+        with open(os.path.join(self.path,self.name.replace('.','_')+"_bias.txt"),'a') as file:
+            file.write(bias_data_numpy+'\n\n\n\n')
+            file.write(bias_data_qdp_numpy+'\n\n\n\n')
+
+        # 画出量化和原始权重的直方图
+        weight_path=os.path.join(self.path, self.name.replace('.','_') + "_weight_o.png")
+        bias_path=os.path.join(self.path, self.name.replace('.','_') + "_bias_o.png")
+        self.plot_hist(weight_data.cpu().numpy(),2048,weight_path,title='weight')
+        self.plot_hist(bias_data.cpu().numpy(),2048,bias_path,title='bias')
+
+        weight_path_q=os.path.join(self.path, self.name.replace('.','_') + "_weight_q.png")
+        bias_path_q=os.path.join(self.path, self.name.replace('.','_') + "_bias_q.png")
+        self.plot_hist(weight_data_qdp.cpu().numpy(),2048,weight_path_q,title='weight')
+        self.plot_hist(bias_data_qdp.cpu().numpy(),2048,bias_path_q,title='bias')
+
+
+
+    # 画直方图的函数
+    def plot_hist(self,ndarray,bins,save_path,title):
+
+        data=ndarray.flatten()
+        fig=plt.figure()
+        # set the plt
+        plt.grid()
+        plt.title(title)
+        plt.xlabel('bins')
+        plt.ylabel('counter/frequency')
+        plt.hist(data,bins,density=True,histtype='bar',facecolor='blue')
+        if save_path is not None:
+            fig.savefig(save_path, bbox_inches='tight')
+        else:
+            raise NotImplementedError("the path is not exists")
+        plt.close(fig)
 
 
 if __name__=="__main__":

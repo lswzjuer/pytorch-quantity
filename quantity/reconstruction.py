@@ -2,7 +2,7 @@
 # @Author: liusongwei
 # @Date:   2019-06-17 10:43:49
 # @Last Modified by:   liusongwei
-# @Last Modified time: 2019-06-17 11:38:49
+# @Last Modified time: 2019-06-21 18:25:38
 # -*- coding:utf-8 -*i
 import os
 import yaml
@@ -11,10 +11,9 @@ from collections import OrderedDict
 import torch
 import torch.nn as nn
 import torchvision.models as visionmodels
-
 from common.quantity import walk_dirs, merge_bn
 from common.quantity import BitReader,Eltwise,Concat,Identity,NewConv2d,NewAdd,NewLinear,TestConv,TestLinear
-
+from common.quantity import merge_bn
 
 def Run_model_quantizer(model,quantity_cfg):
     '''
@@ -90,6 +89,7 @@ def Run_model_quantizer(model,quantity_cfg):
     print(colored("Rewrite quantization information has been done","green"))
 
 
+# Rebuild model class
 class Reconstruction(object):
     """docstring for Reconstruction"""
 
@@ -99,22 +99,16 @@ class Reconstruction(object):
         self.load_configs()
 
     def load_configs(self):
-        assert os.path.isfile("configs.yml"), "configs.yml is necessary"
-        assert os.path.isfile("user_configs.yml"), "user_configs.yml is necessary"
+
         #read quantity config file
         with open("./configs.yml") as f:
             self.config = yaml.load(f)
-        #read user config file
-        with open("./user_configs.yml") as f:
-            self.user_config = yaml.load(f)      
 
     def get_quantity_information(self):
 
+        # the cared_op_type list, it must be same as the list used in the quantification process
         cared_op_type=self.config['SETTINGS']['CARE_OP_TYPE']
-        # cared_op_type = ['Conv2d', 'Linear', 'Eltwise', 'Concat']
         # Read quantization information we need
-        # weight_file=quantity_cfg['OUTPUT']['WEIGHT_BIT_TABLE']
-        # feat_file=quantity_cfg['OUTPUT']['FEAT_BIT_TABLE']
         weight_file=self.config['OUTPUT']['WEIGHT_BIT_TABLE']
         feat_file=self.config['OUTPUT']['FEAT_BIT_TABLE']
 
@@ -122,38 +116,35 @@ class Reconstruction(object):
         # weight table and feat table
         weight_bits, bias_bits = bit_reader.get_weight_info()
         feat_bits, infeat_bits = bit_reader.get_feat_info()
-
-        # modify dict'key(layer name) from X_X to X.X
         # 如果某个带参数的层比如 deconv 没有加入activation_quantizer里面的 cared_op_type
         # 那么就会出现层名在weight_bits里面，但是不再feat_bits里面，就会出错
         all_quantize_infor=OrderedDict()
         for name ,bit in weight_bits.items():
-
             # the layer whcih have weight and bias must be also in feat table
             assert name in feat_bits, "{} not in {}".format(name, feat_bits)
             assert name in infeat_bits, "{} not in {}".format(name, infeat_bits)
-
             # Restore the original layer name
-            new_name=name.replace('_', '.')
+            new_name=name
             weight_bit=bit
             bias_bit=bias_bits[name]
             output_bit=feat_bits[name]
             input_bit=int(infeat_bits[name][0])
             print("name: {} weight:{} bias:{} in:{} out:{}".format(new_name,weight_bit,bias_bit,input_bit,output_bit))
             # Verification bit  accuracy
-            assert bias_bit==output_bit ,"the bias bit != output bit in layer :{}".format(new_name)
+            # assert bias_bit==output_bit ,"the bias bit != output bit in layer :{}".format(new_name)
             if new_name not in all_quantize_infor:
                 new_dict={}
                 new_dict['weight_bit']=weight_bit
-                new_dict['bias_bit'] = bias_bit
+                new_dict['bias_bit'] = output_bit
                 new_dict['output_bit'] = output_bit
                 new_dict['input_bit'] = input_bit
                 all_quantize_infor[new_name]=new_dict
 
+
         # some layer without parameters in feat table but not in weight table,
         # we should collete them
         for name, bit in feat_bits.items():
-            new_name = name.replace('_', '.')
+            new_name=name
             if new_name in all_quantize_infor:
                 continue
             else:
@@ -164,29 +155,29 @@ class Reconstruction(object):
                 if new_name=='image':
                     new_dict['input_bit']=None
                 else:
-                    assert int(infeat_bits[name][0])==bit, "inputbit!=outputbit in {} ".format(new_name)
+                    #assert int(infeat_bits[name][0])==bit, "inputbit!=outputbit in {} ".format(new_name)
                     new_dict['input_bit'] = int(infeat_bits[name][0])
                 all_quantize_infor[new_name]=new_dict
+
         # The convolution layer and full connection layer are needed to reconstruct the network
         quantize_infor_keys=all_quantize_infor.keys()
-
         for name, module in self.model.named_modules():
             module_type=type(module).__name__
+            print("name is : {}  module_type is : {}".format(name,module_type))
             if name in quantize_infor_keys and module_type in cared_op_type :
                 #The module already contains information with a parameter layer
                 all_quantize_infor[name]['layer'] = module
                 all_quantize_infor[name]['layer_type']=module_type
 
-        return all_quantize_infor      
+        return all_quantize_infor
 
-    def ReconModel(self,all_quantize_infor):
+
+    def ReconModel(self,all_quantize_infor,new_model_path):
         '''
         :param all_quantize_infor:
         :return: the new quantity model
         '''
-        new_model_path=self.user_config['PATH']['QUANTITY_MODEL_PATH']
-        
-        # new_model_path=r"./lenet/new_letnet.pth"
+
         for name, module in self.model.named_modules():
             module_type=type(module).__name__
             # replace conv layer
@@ -246,15 +237,17 @@ class Reconstruction(object):
             else:
                 #raise  NotImplementedError(colored("Please add new layer change support !!!!"),'red')
                 continue
-
         print(colored("Model reconstruction successfully !",'green'))
         torch.save(self.model,new_model_path)
         return self.model
 
-    def ReconTest(model,all_quantize_infor):
+    def ReconTest(self,all_quantize_infor,new_model_path):
 
-        new_model_path=self.user_config['PATH']['QUANTITY_MODEL_PATH']
-
+        '''
+        w->qw->dqw
+        bias->qbias->dqbias
+        output->qoutput->dqoutput
+        '''
         for name, module in self.model.named_modules():
             module_type = type(module).__name__
             # replace conv layer
@@ -264,14 +257,18 @@ class Reconstruction(object):
                 name_split = name.split('.')
                 if len(name_split) == 1:
                     find_module.add_module(name_split[0],
-                                           TestConv(name,module, all_quantize_infor[name]))
+                                           TestConv(name,module, all_quantize_infor[name],new_model_path))
+
+                    print("name is : {}\n quantize_info is : {}".format(name,all_quantize_infor[name]))
                     print(colored('The layer change: {} ==>NewConv2d '.format(name), 'green'))
                 elif len(name_split) >= 2:
                     father_list = name_split[:-1]
                     for n in father_list:
                         find_module = getattr(find_module, n)
                     find_module.add_module(name_split[-1],
-                                           TestConv(name, module, all_quantize_infor[name]))
+                                           TestConv(name, module, all_quantize_infor[name],new_model_path))
+
+                    print("name is : {}\n quantize_info is : {}".format(name,all_quantize_infor[name]))
                     print(colored('The layer change: {} ==>NewConv2d '.format(name), 'green'))
                 else:
                     raise ValueError("the conv layer name is wrong")
@@ -282,17 +279,22 @@ class Reconstruction(object):
                 name_split = name.split('.')
                 if len(name_split) == 1:
                     find_module.add_module(name_split[0],
-                                           TestLinear(name, module, all_quantize_infor[name]))
+                                           TestLinear(name, module, all_quantize_infor[name],new_model_path))
+
+                    print("name is : {}\n quantize_info is : {}".format(name,all_quantize_infor[name]))
                     print(colored('The layer change: {} ==>NewLinear '.format(name), 'green'))
                 elif len(name_split) >= 2:
                     father_list = name_split[:-1]
                     for n in father_list:
                         find_module = getattr(find_module, n)
                     find_module.add_module(name_split[-1],
-                                           TestLinear(name, module, all_quantize_infor[name]))
+                                           TestLinear(name, module, all_quantize_infor[name],new_model_path))
+
+                    print("name is : {}]\n quantize_info is : {}".format(name,all_quantize_infor[name]))
                     print(colored('The layer change: {} ==>NewLinear '.format(name), 'green'))
                 else:
                     raise ValueError("the linear layer name is wrong")
+
             # replace eltwise layer
             elif module_type == "Eltwise":
                 assert all_quantize_infor[name]['layer_type'] == "Eltwise", "layer type wrong"
@@ -301,6 +303,7 @@ class Reconstruction(object):
                 if len(name_split) == 1:
                     find_module.add_module(name_split[0],
                                            NewAdd())
+                    print("name is : {}\n quantize_info is : {}".format(name,all_quantize_infor[name]))
                     print(colored('The layer change: {} ==>NewAdd '.format(name), 'green'))
                 elif len(name_split) >= 2:
                     father_list = name_split[:-1]
@@ -308,6 +311,8 @@ class Reconstruction(object):
                         find_module = getattr(find_module, n)
                     find_module.add_module(name_split[-1],
                                            NewAdd())
+
+                    print("name is : {}\n quantize_info is : {}".format(name,all_quantize_infor[name]))
                     print(colored('The layer change: {} ==>NewAdd '.format(name), 'green'))
                 else:
                     raise ValueError("the Eltwise layer name is wrong")
@@ -318,4 +323,12 @@ class Reconstruction(object):
         print(colored("Model reconstruction successfully !", 'green'))
         torch.save(self.model, new_model_path)
         return self.model
+        
+    def merge_bn(self):
+        '''
+        input: the origin model
+        output: the model without bn layer
+        '''
+        # self.model=merge_bn(self.model) 
+        return merge_bn(self.model)
 

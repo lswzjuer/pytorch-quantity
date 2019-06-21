@@ -1,11 +1,22 @@
 OUTPUT:
-    WORK_DIR: ./workdir
-    WEIGHT_BIT_TABLE: ./workdir/weight.table
-    FEAT_BIT_TABLE: ./workdir/feat.table
-    WEIGHT_DIR: ./workdir/weight
-    BIAS_DIR: ./workdir/bias
-    FINAL_WEIGHT_DIR: ./workdir/new_weight
-    FINAL_BIAS_DIR: ./workdir/new_bias
+    # # letnet config
+    # WORK_DIR: ./workdir/lenet
+    # WEIGHT_BIT_TABLE: ./workdir/lenet/weight.table
+    # FEAT_BIT_TABLE: ./workdir/lenet/feat.table
+    # WEIGHT_DIR: ./workdir/lenet/weight
+    # BIAS_DIR: ./workdir/lenet/bias
+    # FINAL_WEIGHT_DIR: ./workdir/lenet/new_weight
+    # FINAL_BIAS_DIR: ./workdir/lenet/new_bias
+
+    # resnet config
+    WORK_DIR: ./workdir/resnet
+    WEIGHT_BIT_TABLE: ./workdir/resnet/weight.table
+    FEAT_BIT_TABLE: ./workdir/resnet/feat.table
+    WEIGHT_DIR: ./workdir/resnet/weight
+    BIAS_DIR: ./workdir/resnet/bias
+    FINAL_WEIGHT_DIR: ./workdir/resnet/new_weight
+    FINAL_BIAS_DIR: ./workdir/resnet/new_bias
+
 
 SETTINGS:
     GPU: 0
