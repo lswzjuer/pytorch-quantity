@@ -37,5 +37,5 @@ dist/
 
 *.txt
 *.bak
-workdir/*
+quantity/test/workdir/*
 
