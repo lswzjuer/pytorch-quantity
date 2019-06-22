@@ -7,17 +7,17 @@ pytorchremodel 是针对pytorch训练出的模型提供量化，和仿真的工�
 # 项目路径
 
 pytorchremodel
-I── quantity
-I   I── common
-I   I── model
-I   I── test
-I   L── tools
-L── README.md
+I── quantity  
+I   I── common  
+I   I── model  
+I   I── test  
+I   L── tools  
+L── README.md  
 
-model: 存储训练好的模型（结构文件: xx.py, 权重文件 xx.pth）
-common: 量化所需的运算与量化层定义
-tool: 量化工具函数和量化配置
-test：用户路径，量化与测试时用户需要写的代码与配置
+model: 存储训练好的模型（结构文件: xx.py, 权重文件 xx.pth）  
+common: 量化所需的运算与量化层定义  
+tool: 量化工具函数和量化配置  
+test：用户路径，量化与测试时用户需要写的代码与配置  
 
 
 # 使用说明 
