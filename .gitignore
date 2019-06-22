@@ -30,9 +30,7 @@ dist/
 .idea
 
 # project dirs
-/datasets
-/models
-/output
+*datasets
 
 # vscode
 .vscode
