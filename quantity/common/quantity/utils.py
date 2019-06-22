@@ -4,7 +4,7 @@ import torch
 from .fabu_layer import Identity
 from termcolor import colored
 
-def merge_bn(model):
+def merge_bn(model,device = 'cpu'):
 
     conv_layer = None
     for name, layer in model.named_modules():
@@ -35,6 +35,9 @@ def merge_bn(model):
 
             # merge bn to conv layer
             tmp = alpha / torch.sqrt(var + 1e-5)
+            if (device == 'cuda'):
+                tmp = tmp.cuda()
+                bias_data = bias_data.cuda()
             new_weight = tmp.view(tmp.size()[0], 1, 1, 1)*weight_data
             new_bias=tmp*(bias_data -mean ) + beta
 
@@ -72,3 +75,23 @@ def walk_dirs(dir_name, file_type=None):
             files_path.append(file_path)
 
     return files_path
+
+
+def tid(tensor):
+    """
+    Return unique id for the tensor based on the tensor value.
+
+    Args:
+        tensor: torch tensor of any shape.
+
+    Returns:
+        str
+    """
+    ids = []
+    x = tensor.cpu()
+    ids.append(
+        str(int((x[..., 0].max() + x[..., 0].min()).item() * 1e4 % 1e4)))
+    ids.append(str(int((x.max() + x.min()).item() * 1e4 % 1e4)))
+    ids.append(str(int(x[..., 0].mean().item() * 1e4 % 1e4)))
+    ids.append(str(int(x.mean().item() * 1e4 % 1e4)))
+    return ''.join(ids)

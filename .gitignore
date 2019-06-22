@@ -30,14 +30,12 @@ dist/
 .idea
 
 # project dirs
-/datasets
-/models
-/output
+*datasets
 
 # vscode
 .vscode
 
 *.txt
 *.bak
-workdir
-data
+quantity/test/workdir/*
+
