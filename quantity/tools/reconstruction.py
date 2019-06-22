@@ -11,7 +11,6 @@ from collections import OrderedDict
 import torch
 import torch.nn as nn
 import torchvision.models as visionmodels
-sys.path.insert(0, '../')
 from common.quantity import walk_dirs, merge_bn
 from common.quantity import BitReader,Eltwise,Concat,Identity,NewConv2d,NewAdd,NewLinear,TestConv,TestLinear
 from common.quantity import merge_bn
@@ -102,7 +101,7 @@ class Reconstruction(object):
     def load_configs(self):
 
         #read quantity config file
-        with open("./configs.yml") as f:
+        with open("../tools/configs.yml") as f:
             self.config = yaml.load(f)
 
     def get_quantity_information(self):

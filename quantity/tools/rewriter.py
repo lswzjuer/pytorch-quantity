@@ -5,7 +5,6 @@ import yaml
 import json
 import numpy as np
 from termcolor import colored
-sys.path.insert(0, '../')
 from common.quantity import BitReader, walk_dirs
 
 

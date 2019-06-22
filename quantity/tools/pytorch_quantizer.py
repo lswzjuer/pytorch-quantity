@@ -12,26 +12,23 @@ import math
 import json
 from collections import OrderedDict, defaultdict, Counter
 from termcolor import colored
-from rewriter import BiasReWriter
-
-sys.path.insert(0,'../')
-from common.quantity import DistributionCollector, Quantizer, walk_dirs, merge_bn
-from common.utils import tid
+from .rewriter import BiasReWriter
+from common.quantity import DistributionCollector, Quantizer, walk_dirs, merge_bn, tid
 
 
 class Quantity(object):
 
     def __init__(self,model):
 
-        assert os.path.isfile("configs.yml"), "./configs.yml"
-        assert os.path.isfile("../test/user_configs.yml"), "../test/user_configs.yml"
+        assert os.path.isfile("../tools/configs.yml"), "./configs.yml"
+        assert os.path.isfile("./user_configs.yml"), "../test/user_configs.yml"
 
         #read quantity config file
-        with open("./configs.yml") as f:
+        with open("../tools/configs.yml") as f:
             self.config = yaml.load(f)
 
         #read user config file
-        with open("../test/user_configs.yml") as f:
+        with open("./user_configs.yml") as f:
             self.user_config = yaml.load(f)
 
         #create output folders
@@ -72,9 +69,6 @@ class Quantity(object):
                 获取模型的信息，将不关心的层过滤掉，构建模型结果net_info:{intput, type}
 
         """
-        # all_op_type = ['Conv2d', 'Linear', 'Eltwise', 'Concat', 'MaxPool2d', 'ReLU',
-        #                'UpsamplingNearest2d', 'View', 'AvgPool2d']
-        #cared_op_type = ['Conv2d', 'Linear', 'Eltwise', 'Concat']
         cared_op_type = self._cared_op_type
         all_op_type = self._all_op_type
 
@@ -103,11 +97,9 @@ class Quantity(object):
                 name_keys = "%s_%i" % (class_name, len(name_to_type) + 1)
               
                 for t in input:
-                    # print('input', tid(t))
                     name_to_input_id[name_keys].append(tid(t))
 
                 if name_keys not in name_to_id.keys():
-                    # print('output',tid(output))
                     name_to_type[name_keys] = layer_type
                     name_to_id[name_keys] = tid(output)
                 else:
@@ -142,7 +134,6 @@ class Quantity(object):
         model.apply(register_hook)
 
         # make a forward pass
-        # print(x.shape)
         model(*x)
 
         # remove these hooks
@@ -218,6 +209,14 @@ class Quantity(object):
 
 
     def prune_net_info(self, net_info, keep_node_list):
+        r"""
+        调整net_info信息，忽略不关心层，使关心层的输入输出衔接，从而
+        使其输入输出小数位衔接
+        args:
+            net_info:调整前网络信息，包含每层输出id，类型，输入层id
+        return：
+            new_net_info:调整后的网络信息，使关心层的输入输出相衔接
+        """
         all_op_names = set(list(net_info.keys()))
         prune_op_names = all_op_names - set(keep_node_list)
         keys = list(net_info.keys())[::-1]
@@ -257,6 +256,11 @@ class Quantity(object):
         return net_info_new
     
     def preprocess(self, image):
+        r"""
+        预处理：读取数据的3中模式：0：读取图片，image为图片路径，并设置mean, resize, scale
+                                1:直接返回dataloader的数据，image为loader中的数据格式为：data,label
+                                2:读取npy文件，image 为数据路径
+        """
         data_option = int(self.user_config['PRE_PROCESS']['IMG'])
         if (data_option== 0):
             mean = slef.user_config['PRE_PROCESS']['IMG_SET']['MEAN']
@@ -298,6 +302,9 @@ class Quantity(object):
         print("forward time : %.3f s" % (end - start))
 
     def get_merge_groups(self, net):
+        r"""
+        获取将要合并的关心的layers
+        """
         merge_ops = self._merge_op_type
         cared_op_type = self._cared_op_type
 
@@ -340,6 +347,9 @@ class Quantity(object):
         return merge_groups
 
     def activation_quantize(self, images_files):
+        r"""
+        对激活层进行量化
+        """
         interval_num = self.config['SETTINGS']['INTERVAL_NUM']
         statistic = self.config['SETTINGS']['STATISTIC']
         worker_num = self.config['SETTINGS']['WORKER_NUM']
@@ -602,6 +612,7 @@ class Quantity(object):
 
             param_np = param.detach().cpu().numpy()
 
+            #当前不支持dilation,对weight进行更改
             if name.endswith('weight') and isinstance(module, nn.Conv2d):
                 dilation = module.dilation
                 if dilation != (1, 1) and not support_dilation:

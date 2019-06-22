@@ -1,0 +1,30 @@
+image 5
+conv1.0 6 5
+layer1.0.left.0 6 6
+layer1.0.left.3 6 6
+layer1.0.Eltwise 6 6 6
+layer1.1.left.0 5 6
+layer1.1.left.3 6 5
+layer1.1.Eltwise 5 6 6
+layer2.0.left.0 5 5
+layer2.0.left.3 5 5
+layer2.0.shortcut.0 5 5
+layer2.0.Eltwise 5 5 5
+layer2.1.left.0 6 5
+layer2.1.left.3 5 6
+layer2.1.Eltwise 4 5 5
+layer3.0.left.0 5 4
+layer3.0.left.3 5 5
+layer3.0.shortcut.0 5 4
+layer3.0.Eltwise 5 5 5
+layer3.1.left.0 6 5
+layer3.1.left.3 5 6
+layer3.1.Eltwise 5 5 5
+layer4.0.left.0 6 5
+layer4.0.left.3 5 6
+layer4.0.shortcut.0 5 5
+layer4.0.Eltwise 5 5 5
+layer4.1.left.0 6 5
+layer4.1.left.3 5 6
+layer4.1.Eltwise 5 5 5
+fc 2 5

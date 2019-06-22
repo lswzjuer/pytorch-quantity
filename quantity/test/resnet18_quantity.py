@@ -2,31 +2,38 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision import datasets
 import numpy as np
-import activation_quantizer
+import sys
+sys.path.insert(0, '../')
+
+from tools import Quantity
 from model.resnet.ResNet_18_fabu import ResNet18
-from common.quantity.utils import merge_bn
+from common.quantity import merge_bn
 import torch
+import yaml
 
 import torchvision
-
     
 def main():
     model = ResNet18()
-    # for name, m in model.named_modules():
-    #     if type(m).__name__ in ['Conv2d', 'Linear', 'Eltwise', 'Concat', 'MaxPool2d', 'ReLU', 'UpsamplingNearest2d', 'myView']:
-    #         print(name)
-    model_path = './model/resnet/resnet18.pth'
-    model.load_state_dict(torch.load(model_path))
-    #model.load_state_dict(torch.load(model_path, map_location='cpu'))
-    model.cuda()
-    model.eval()
-   
-    model = merge_bn(model)
 
-    seed = 100
-    torch.manual_seed(seed)
-    inputs = torch.rand(1, 3, 32, 32)
-    
+    model_path = '../model/resnet/resnet18.pth'
+
+    #read user config file
+    with open("./user_configs.yml") as f:
+        user_config = yaml.load(f)
+    device = user_config['SETTINGS']['DEVICE']
+    if (device == 'gpu'):
+            
+        model.load_state_dict(torch.load(model_path))
+        model.cuda()
+        model.eval()
+        model = merge_bn(model, 'cuda')
+    else:
+        model.load_state_dict(torch.load(model_path, map_location='cpu'))
+        model.eval()
+        model = merge_bn(model, 'cpu')
+   
+   
 
     transform_test = transforms.Compose([
         transforms.ToTensor(),
@@ -40,8 +47,8 @@ def main():
     # Cifar-10的标签
     classes = ('plane', 'car', 'bird', 'cat', 'deer',
             'dog', 'frog', 'horse', 'ship', 'truck')
-    test_lenet = activation_quantizer.Quantity(model)
-    #test_lenet.activation_quantize(testloader)
+    test_lenet = Quantity(model)
+    test_lenet.activation_quantize(testloader)
     test_lenet.weight_quantize()
     test_lenet.rewrite_weight()
 

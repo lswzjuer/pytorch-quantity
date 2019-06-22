@@ -7,18 +7,18 @@
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision import datasets
-import reconstruction
-import model.resnet.ResNet_18_fabu as resnet
 import torch
 import torch.nn as nn
-import os 
+import os,sys
+sys.path.insert(0, '../')
+from tools import reconstruction
 import yaml
-
+import model.resnet.ResNet_18_fabu as resnet
 
 def main():
 
     # load userconfigs files
-    assert os.path.isfile("configs.yml"), "configs.yml is necessary"
+    assert os.path.isfile("../tools/configs.yml"), "configs.yml is necessary"
     assert os.path.isfile("user_configs.yml"), "user_configs.yml is necessary"
     
     #read user config file

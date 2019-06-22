@@ -4,7 +4,7 @@ import torch
 from .fabu_layer import Identity
 from termcolor import colored
 
-def merge_bn(model):
+def merge_bn(model,device = 'cpu'):
 
     conv_layer = None
     for name, layer in model.named_modules():
@@ -35,6 +35,9 @@ def merge_bn(model):
 
             # merge bn to conv layer
             tmp = alpha / torch.sqrt(var + 1e-5)
+            if (device == 'cuda'):
+                tmp = tmp.cuda()
+                bias_data = bias_data.cuda()
             new_weight = tmp.view(tmp.size()[0], 1, 1, 1)*weight_data
             new_bias=tmp*(bias_data -mean ) + beta
 

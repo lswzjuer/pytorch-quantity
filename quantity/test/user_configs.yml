@@ -6,7 +6,7 @@ PATH:
     # QUANTITY_MODEL_PATH: ./workdir/lenet/quantity_lenet.pth
 
     # resnet user configs
-    DATA_PATH: ./datasets/
+    DATA_PATH: /private/zhangjiwei/data/CIFAR-10_DATA
     MODEL_NET_PATH: ../model/resnet/resnet_18_fabu.py
     MODEL_PATH: ../model/resnet/resnet18.pth
     QUANTITY_MODEL_PATH: ../model/resnet/quantity_resnet.pth
@@ -21,7 +21,7 @@ PRE_PROCESS:
       SCALE: 0.0075
 
 SETTINGS:
-    DEVICE: gpu 
+    DEVICE: cpu 
     GPU: 0 
 
 
