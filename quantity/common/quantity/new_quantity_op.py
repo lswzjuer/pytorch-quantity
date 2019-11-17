@@ -95,7 +95,7 @@ class Sp(nn.Module):
 class BiasAdd(nn.Module):
     def __init__(self):
         super(BiasAdd, self).__init__()
-
+        
     def forward(self, x, y):
         output = torch.add(x, y)
         return output
@@ -139,7 +139,7 @@ class NewConv2d(nn.Module):
         assert type(self.weight).__name__ != "NoneType", "The conv weight can`t be None"
         weight_data=self.weight.data
         if type(self.bias).__name__ == "NoneType":
-            bias_data =torch.zeros(size=[self.conv.out_channels])
+            bias_data =torch.zeros(size=[self.Conv.out_channels])
         else:
             bias_data=self.bias.data
 
@@ -278,6 +278,8 @@ class TestConv(nn.Module):
         self.feature_extract()
 
     def forward(self,x):
+
+        # 通过这种方法来衡量 输入 权重 输出 三种量化哪个对精度的影响更大
         output=self.Conv(x)
         output_qdp=self.output_qdp(output)
 
@@ -287,9 +289,7 @@ class TestConv(nn.Module):
         # with open(os.path.join(self.path,self.name.replace('.','_')+"_output.txt"),'a') as file:
         #     file.write(output_numpy+'\n')
         #     file.write(output_qdp_numpy+'\n')
-
         return output_qdp
-
 
     def feature_extract(self):
         self.weight=self.Conv.weight
@@ -433,8 +433,6 @@ class TestLinear(nn.Module):
         bias_path_q=os.path.join(self.path, self.name.replace('.','_') + "_bias_q.png")
         self.plot_hist(weight_data_qdp.cpu().numpy(),2048,weight_path_q,title='weight')
         self.plot_hist(bias_data_qdp.cpu().numpy(),2048,bias_path_q,title='bias')
-
-
 
     # 画直方图的函数
     def plot_hist(self,ndarray,bins,save_path,title):

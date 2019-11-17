@@ -2,7 +2,7 @@
 # @Author: liusongwei
 # @Date:   2019-06-17 10:43:49
 # @Last Modified by:   liusongwei
-# @Last Modified time: 2019-06-21 19:05:42
+# @Last Modified time: 2019-11-17 21:18:50
 # -*- coding:utf-8 -*i
 import os
 import yaml
@@ -142,7 +142,7 @@ class Reconstruction(object):
 
 
         # some layer without parameters in feat table but not in weight table,
-        # we should collete them
+        # we should collete them ，such as  eltwise,concat
         for name, bit in feat_bits.items():
             new_name=name
             if new_name in all_quantize_infor:
@@ -177,7 +177,6 @@ class Reconstruction(object):
         :param all_quantize_infor:
         :return: the new quantity model
         '''
-
         for name, module in self.model.named_modules():
             module_type=type(module).__name__
             # replace conv layer

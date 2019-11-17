@@ -103,6 +103,8 @@ class Quantizer:
         for threshold in range(target_bin, distribution.size):
             t_distribution = list(distribution[:threshold])
             t_distribution[threshold - 1] += threshold_sum
+
+            # 方便下一次相加，减少计算量
             threshold_sum = threshold_sum - distribution[threshold]
 
             quantize_distribution = [0. for _ in range(target_bin)]

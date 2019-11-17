@@ -89,9 +89,7 @@ class Quantity(object):
         (通过一次forward，注册hook)
         """
         def register_hook(m):
-            
             def _hook(m, input, output):
-                
                 layer_type = type(m).__name__
                 class_name = str(m.__class__).split(".")[-1].split("'")[0]
                 name_keys = "%s_%i" % (class_name, len(name_to_type) + 1)
@@ -107,10 +105,9 @@ class Quantity(object):
                     raise NotImplementedError
 
             layer_type = type(m).__name__
-            
+            # 注册前向的hook，再hook里面可以基于输入输出进行一些操作
             if (layer_type in all_op_type):
                 hooks.append(m.register_forward_hook(_hook))
-
 
         device = device.lower()
         assert device in [
@@ -143,9 +140,7 @@ class Quantity(object):
         # for para, names in name_to_param.items():
         #     print(para,names)
 
-
         self.layers_num = len(name_to_id)
-
         # since we use OrderDict, so we can just generate new id for repeat tensor and
         # modify the following ids to new one.
         modify_id = {}
@@ -182,10 +177,12 @@ class Quantity(object):
         trigger = None
         for i, (name, idx) in enumerate(name_to_id.items()):
             inputs = []
-
             for inp_idx in name_to_input_id[name]:
+                # 这名name层的输入id之一的inp_idx是属于某一层的id
                 if inp_idx in id_to_name:
                     inputs.append(id_to_name[inp_idx])
+                # 如果不是，那么inp_idx必然是整个网络的输入对应的id
+                # 它必然只能是第一层的输入id众，因此i==0，否则出错
                 elif i != 0:
                     trigger = name
             net[name] = {'inputs': inputs, 'type': name_to_type[name]}
@@ -207,13 +204,12 @@ class Quantity(object):
         return layer_names
 
 
-
     def prune_net_info(self, net_info, keep_node_list):
         r"""
         调整net_info信息，忽略不关心层，使关心层的输入输出衔接，从而
         使其输入输出小数位衔接
         args:
-            net_info:调整前网络信息，包含每层输出id，类型，输入层id
+            net_info:调整前网络信息，包含每层输入id，类型
         return：
             new_net_info:调整后的网络信息，使关心层的输入输出相衔接
         """
@@ -232,9 +228,7 @@ class Quantity(object):
             assert len(info['inputs']) <= 1, (info['inputs'], name)
             if len(info['inputs']) == 0:
                 return None
-
             inp = info['inputs'][0]
-
             if inp in prune_op_names:
                 return _dfs(inp)
             else:
@@ -243,7 +237,6 @@ class Quantity(object):
         for name, info in net_info_rev.items():
             if name in prune_op_names:
                 continue
-
             for ind in range(len(info['inputs'])):
                 inp = info['inputs'][ind]
                 if inp in prune_op_names:
@@ -255,6 +248,7 @@ class Quantity(object):
 
         return net_info_new
     
+
     def preprocess(self, image):
         r"""
         预处理：读取数据的3中模式：0：读取图片，image为图片路径，并设置mean, resize, scale
@@ -273,7 +267,7 @@ class Quantity(object):
             img = origimg.astype(np.float32) - mean
             img = img.transpose((2, 0, 1))
             img = img[np.newaxis, :]
-            img = torch.tensor(img, dtype=torch.float).cuda()
+            img = torch.tensor(img, dtype=torch.float)
             return img
         
         elif(data_option == 1):
@@ -346,6 +340,8 @@ class Quantity(object):
 
         return merge_groups
 
+
+
     def activation_quantize(self, images_files):
         r"""
         对激活层进行量化
@@ -358,6 +354,7 @@ class Quantity(object):
         table_file_content = []
         bottom_feat_names = self.get_merge_groups(self.net_info)
         top_feat_names = ['image'] + list(self.net_info.keys())
+        # print top_feat_names 
         for top_name in top_feat_names:
             print(top_name)
         max_vals = {}
@@ -372,6 +369,10 @@ class Quantity(object):
         quantizer = Quantizer(top_feat_names, worker_num=worker_num, debug=False)
 
         named_feats, _ = self.regist_hook_outfeature(self.model)
+
+        # print named_feats
+        # 必须要确保top_feat_names与named_feats名字命名规则一直才可以
+        # 理论上明明规则是一样的
        
         
         # run float32 inference on calibration dataset to find the activations range
@@ -391,6 +392,7 @@ class Quantity(object):
 
         print(colored('max_vals', 'green'), collector.max_vals)
         distribution_intervals = collector.distribution_intervals
+
         for b_names in bottom_feat_names:
             assert len(b_names) > 1
             tmp_distribution_interval = 0
@@ -400,6 +402,7 @@ class Quantity(object):
                     b_is_eltwise = True
             if (b_is_eltwise):
                 continue
+            # 不要求相加的小数位一致？ 这是为了适应resnet的特点
             # distributions
             for pre_feat_name in b_names:
                 tmp_distribution_interval = max(tmp_distribution_interval,
@@ -446,6 +449,7 @@ class Quantity(object):
         bits = quantizer.bits
 
         # eltwise1 = eltwise0 + conv0 : bit(conv0)=bit(eltwise0)
+        # 在这里是为了适应resnet的结构
         for b_names in bottom_feat_names:
             assert len(b_names) > 1
             elt_idx = 0
@@ -463,6 +467,8 @@ class Quantity(object):
 
         is_first_op = True
         for i, feat_name in enumerate(top_feat_names):
+            # 再这里可以直接用feat_name进行写入，但是feat_name是我们按照自己的规则进行命名的
+            # 所以其对应的网络明明再self.cared_op_layer_names里面
             if (feat_name == 'image'):
                 feat_str = 'image' + ' ' + str(bits['image'])
             elif is_first_op:
@@ -490,13 +496,12 @@ class Quantity(object):
         out_feat = OrderedDict()
         hooks = []
         #print('layer num:', self.layers_num)
-
         all_op_type = self._all_op_type
+
         def _make_hook(m):
-            
+
             def _hook(m, input, output):
                 class_name = str(m.__class__).split(".")[-1].split("'")[0]
-                
                 layer_type = type(m).__name__
                 idx = len(out_feat) % (int(self.layers_num + 1))
                 if (idx == 0):
@@ -504,14 +509,16 @@ class Quantity(object):
                     out_feat['image'] = input[0].detach().cpu().numpy()
                     idx = len(out_feat)
                 name_keys = "%s_%i" % (class_name, idx)
+                # name_keys = "%s_%i" % (class_name, len(out_feat))
                 out_feat[name_keys] = output.detach().cpu().numpy()
 
             if (type(m).__name__ in all_op_type):
                 hooks.append(m.register_forward_hook(_hook))
 
+        # 对模型中的每个模块的输出均执行_make_hook操作，本质商也就是保存每一层的输出特征图
+        # 后面我们使用的时候，要有针对性的修改，具体来说就是只保存有意义的特征图的修改
+        
         model.apply(_make_hook)
-
-
         # register hook
       
         return out_feat, hooks
@@ -539,6 +546,9 @@ class Quantity(object):
             os.makedirs(final_weight_dir)
         if not os.path.exists(final_bias_dir):
             os.makedirs(final_bias_dir)
+
+
+
 
     def rewrite_weight(self):
 

@@ -19,9 +19,9 @@ def main():
 
     model = Cnn(1,10)
     
-    test_lenet = activation_quantizer.Quantity(model)
-    # test_lenet.activation_quantize(data_sets)
-    #test_lenet.weight_quantize()
+    test_lenet = Quantity(model)
+    test_lenet.activation_quantize(data_sets)
+    test_lenet.weight_quantize()
     test_lenet.rewrite_weight()
 
 if __name__ == "__main__":
